@@ -11,12 +11,12 @@ public class UnityFlock : MonoBehaviour
 
     // 정렬 관련 변수
     public float toOriginForce = 50.0f; // 군집의 중심으로 이동하는 힘
-    public float toOriginRange = 100.0f; // 군집의 흩어짐 정도
+    public float toOriginRange = 100.0f; // 군집의 흩어짐 정도(범위)
 
     public float gravity = 2.0f;
 
     // 분산 관련 변수 - 개별 개체 간의 최소 거리를 유지하기 위한 변수
-    public float avoidanceRadius = 50.0f;
+    public float avoidanceRadius = 50.0f; // 회피 반경
     public float avoidanceForce = 20.0f;
 
     // 응집 관련 변수 - 군집의 리더 또는 군집의 중심 위치와의 최소 거리를 유지하기 위한 변수
@@ -24,7 +24,7 @@ public class UnityFlock : MonoBehaviour
     public float followRadius = 40.0f;
 
     // 개별 개체의 이동과 관련된 변수
-    private Transform origin; // 군집 오브젝트 전체 그룹을 제어하는 부모 오브젝트
+    private Transform origin; // 군집 오브젝트 전체 그룹을 제어하는 부모 오브젝트, 군집의 중심 역할
     private Vector3 velocity;
     private Vector3 normalizedVelocity;
     private Vector3 randomPush;
@@ -154,7 +154,7 @@ public class UnityFlock : MonoBehaviour
 
         // 최종 속도 계산
         wantedVel -= wantedVel * Time.deltaTime;
-        wantedVel += randomPush * Time.deltaTime;
+        wantedVel += randomPush * Time.deltaTime; // UpdateRandom() 코루틴에서 계산된 랜덤 벡터
         wantedVel += originPush * Time.deltaTime;
         wantedVel += avgVelocity * Time.deltaTime;
         wantedVel += toAvg.normalized * gravity * Time.deltaTime;
@@ -172,6 +172,7 @@ public class UnityFlock : MonoBehaviour
     }
 
     // randomFreq 변수의 시간 간격에 기반해 randomPush 값을 갱신
+    // 랜덤으로 방향을 바꾸는 함수
     IEnumerator UpdateRandom()
     {
         while (true)
