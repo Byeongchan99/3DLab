@@ -131,35 +131,39 @@ namespace StarterAssets
 
         void MantleCheck()
         {
-            // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
-            Vector3 rayStart = transform.position + transform.forward * -0.5f;
-            Vector3 rayDirection = transform.forward;
-
-            if (Physics.Raycast(rayStart, rayDirection, out RaycastHit hit, maxReachDistance, mantleLayerMask))
+            if (_input.mantle && !_isMantling)
             {
-                // 2. 충돌 지점에서 위로 이동한 후 아래 방향으로 트레이스
-                Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight;
-                if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
+                Debug.Log("맨틀 체크");
+                // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
+                Vector3 rayStart = transform.position + transform.forward * -0.5f;
+                Vector3 rayDirection = transform.forward;
+
+                if (Physics.Raycast(rayStart, rayDirection, out RaycastHit hit, maxReachDistance, mantleLayerMask))
                 {
-                    // 3. 표면이 평평한지 확인
-                    if (downwardHit.normal.y > 0.7f)
+                    // 2. 충돌 지점에서 위로 이동한 후 아래 방향으로 트레이스
+                    Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight;
+                    if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
                     {
-                        // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인
-                        Vector3 capsulePosition = downwardHit.point;
-                        float capsuleHeight = _controller.height;
-                        float capsuleRadius = _controller.radius;
-
-                        bool hasRoom = !Physics.CheckCapsule(
-                            capsulePosition + Vector3.up * capsuleRadius,
-                            capsulePosition + Vector3.up * (capsuleHeight - capsuleRadius),
-                            capsuleRadius,
-                            mantleLayerMask
-                        );
-
-                        if (hasRoom)
+                        // 3. 표면이 평평한지 확인
+                        if (downwardHit.normal.y > 0.7f)
                         {
-                            // 맨틀 가능한 경우, 맨틀 동작 시작
-                            StartMantle(downwardHit.point);
+                            // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인
+                            Vector3 capsulePosition = downwardHit.point;
+                            float capsuleHeight = _controller.height;
+                            float capsuleRadius = _controller.radius;
+
+                            bool hasRoom = !Physics.CheckCapsule(
+                                capsulePosition + Vector3.up * capsuleRadius,
+                                capsulePosition + Vector3.up * (capsuleHeight - capsuleRadius),
+                                capsuleRadius,
+                                mantleLayerMask
+                            );
+
+                            if (hasRoom)
+                            {
+                                // 맨틀 가능한 경우, 맨틀 동작 시작
+                                StartMantle(downwardHit.point);
+                            }
                         }
                     }
                 }
@@ -168,6 +172,7 @@ namespace StarterAssets
 
         void StartMantle(Vector3 mantleTarget)
         {
+            Debug.Log("맨틀 시작");
             _isMantling = true;
             targetMantlePosition = mantleTarget;
             StartCoroutine(MantleMovement());
@@ -175,6 +180,7 @@ namespace StarterAssets
 
         System.Collections.IEnumerator MantleMovement()
         {
+            Debug.Log("맨틀 동작 실행 중");
             Vector3 startPosition = transform.position;
             float duration = 1.0f;  // 맨틀 애니메이션의 길이
             float elapsedTime = 0f;
@@ -225,16 +231,16 @@ namespace StarterAssets
         {
             _hasAnimator = TryGetComponent(out _animator);
 
-            if (_isMantling) 
+            if (_isMantling)
             {
-                MantleCheck();
+                Debug.Log("맨틀 중");
+                return;
             }
-            else
-            {
-                JumpAndGravity();
-                GroundedCheck();
-                Move();
-            }
+
+            MantleCheck();
+            JumpAndGravity();
+            GroundedCheck();
+            Move();
         }
 
         private void LateUpdate()

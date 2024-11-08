@@ -28,6 +28,10 @@ namespace StarterAssets
             starterAssetsInputs.SprintInput(virtualSprintState);
         }
         
+        public void VirtualMantleInput(bool virtualMantleState)
+        {
+            starterAssetsInputs.MantleInput(virtualMantleState);
+        }
     }
 
 }
