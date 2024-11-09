@@ -125,56 +125,64 @@ namespace StarterAssets
         /// <summary> Mantle 관련 변수 </summary>
         private bool _isMantling = false;
         public LayerMask mantleLayerMask;  // 맨틀 가능한 레이어 설정
+        public float rayHeight = 0.9f;  // 트레이스 시작 높이
         public float maxReachDistance = 0.5f;  // 전방 트레이스 최대 거리
         public float maxLedgeHeight = 0.9f;  // 맨틀 가능한 장애물 최대 높이
         private Vector3 targetMantlePosition;
 
-        void MantleCheck()
+        public bool CanPerformMantle()
         {
-            if (_input.mantle && !_isMantling)
+            if (_isMantling)
             {
-                Debug.Log("맨틀 체크");
-                // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
-                Vector3 rayStart = transform.position + transform.forward * -0.5f;
-                Vector3 rayDirection = transform.forward;
+                Debug.Log("이미 맨틀하는 중");
+                return false; // 이미 맨틀 중이면 맨틀 불가
+            }
 
-                if (Physics.Raycast(rayStart, rayDirection, out RaycastHit hit, maxReachDistance, mantleLayerMask))
+            // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
+            Vector3 rayStart = transform.position + transform.forward * -0.1f + Vector3.up * rayHeight;
+            Vector3 rayDirection = transform.forward;
+
+            Debug.DrawRay(rayStart, rayDirection * maxReachDistance, Color.red, 0.5f);
+
+            if (Physics.Raycast(rayStart, rayDirection, out RaycastHit hit, maxReachDistance, mantleLayerMask))
+            {
+                // 2. 충돌 지점에서 위로 이동한 후 아래 방향으로 트레이스
+                Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight + transform.forward * 0.14f;
+
+                Debug.DrawRay(downwardRayStart, Vector3.down * maxLedgeHeight, Color.green, 0.5f);
+                if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
                 {
-                    // 2. 충돌 지점에서 위로 이동한 후 아래 방향으로 트레이스
-                    Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight;
-                    if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
+                    // 3. 표면이 평평한지 확인
+                    if (downwardHit.normal.y > 0.7f)
                     {
-                        // 3. 표면이 평평한지 확인
-                        if (downwardHit.normal.y > 0.7f)
+                        // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인
+                        Vector3 capsulePosition = downwardHit.point;
+                        float capsuleHeight = _controller.height;
+                        float capsuleRadius = _controller.radius;
+
+                        bool hasRoom = !Physics.CheckCapsule(
+                            capsulePosition + Vector3.up * capsuleRadius,
+                            capsulePosition + Vector3.up * (capsuleHeight - capsuleRadius),
+                            capsuleRadius,
+                            mantleLayerMask
+                        );
+
+                        if (hasRoom)
                         {
-                            // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인
-                            Vector3 capsulePosition = downwardHit.point;
-                            float capsuleHeight = _controller.height;
-                            float capsuleRadius = _controller.radius;
-
-                            bool hasRoom = !Physics.CheckCapsule(
-                                capsulePosition + Vector3.up * capsuleRadius,
-                                capsulePosition + Vector3.up * (capsuleHeight - capsuleRadius),
-                                capsuleRadius,
-                                mantleLayerMask
-                            );
-
-                            if (hasRoom)
-                            {
-                                // 맨틀 가능한 경우, 맨틀 동작 시작
-                                StartMantle(downwardHit.point);
-                            }
+                            targetMantlePosition = downwardHit.point;
+                            return true; // 맨틀 가능
                         }
                     }
                 }
             }
+
+            return false; // 맨틀 불가
         }
 
-        void StartMantle(Vector3 mantleTarget)
+        public void StartMantle()
         {
             Debug.Log("맨틀 시작");
-            _isMantling = true;
-            targetMantlePosition = mantleTarget;
+            _isMantling = true;         
             StartCoroutine(MantleMovement());
         }
 
@@ -237,7 +245,6 @@ namespace StarterAssets
                 return;
             }
 
-            MantleCheck();
             JumpAndGravity();
             GroundedCheck();
             Move();

@@ -21,8 +21,14 @@ namespace StarterAssets
 		public bool cursorLocked = true;
 		public bool cursorInputForLook = true;
 
+        [Header("Character Controller Reference")]
+        public ThirdPersonControllerWithMantle characterController; // 캐릭터 컨트롤러 참조
+
+        [Header("Mantle Settings")]
+        private bool mantleAttempted = false;  // 맨틀 동작 시도를 추적하기 위한 플래그
+
 #if ENABLE_INPUT_SYSTEM
-		public void OnMove(InputValue value)
+        public void OnMove(InputValue value)
 		{
 			MoveInput(value.Get<Vector2>());
 		}
@@ -35,21 +41,37 @@ namespace StarterAssets
 			}
 		}
 
-		public void OnJump(InputValue value)
-		{
-			JumpInput(value.isPressed);
-		}
+        public void OnJump(InputValue value)
+        {
+            if (value.isPressed && !mantleAttempted)
+            {
+                mantleAttempted = true;
 
-		public void OnSprint(InputValue value)
+                // 점프가 입력되었을 때 컨트롤러에서 Mantle 가능 여부를 체크
+                if (characterController.CanPerformMantle())
+                {
+					Debug.Log("Mantle");
+                    characterController.StartMantle();
+                }
+                else
+                {
+					Debug.Log("Jump");
+                    JumpInput(true);
+                }
+            }
+
+            // 버튼을 놓았을 때 플래그 초기화
+            if (!value.isPressed)
+            {
+                mantleAttempted = false;
+                JumpInput(false);
+            }
+        }
+
+        public void OnSprint(InputValue value)
 		{
 			SprintInput(value.isPressed);
 		}
-
-        public void OnMantle(InputValue value)
-        {
-            Debug.Log($"Mantle Button State: {value.isPressed}");
-            MantleInput(value.isPressed);
-        }
 #endif
 
         public void MoveInput(Vector2 newMoveDirection)
@@ -71,11 +93,6 @@ namespace StarterAssets
 		{
 			sprint = newSprintState;
 		}
-
-        public void MantleInput(bool newMantleState)
-        {
-            mantle = newMantleState;
-        }
 
         private void OnApplicationFocus(bool hasFocus)
 		{
