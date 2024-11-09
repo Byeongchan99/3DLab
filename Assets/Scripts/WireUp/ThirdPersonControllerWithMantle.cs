@@ -153,9 +153,10 @@ namespace StarterAssets
                 if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
                 {
                     // 3. 표면이 평평한지 확인
-                    if (downwardHit.normal.y > 0.7f)
+                    if (downwardHit.normal.y > 0.6f)
                     {
-                        // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인
+                   
+                        // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인(끼임 방지)
                         Vector3 capsulePosition = downwardHit.point;
                         float capsuleHeight = _controller.height;
                         float capsuleRadius = _controller.radius;
@@ -163,7 +164,7 @@ namespace StarterAssets
                         bool hasRoom = !Physics.CheckCapsule(
                             capsulePosition + Vector3.up * capsuleRadius,
                             capsulePosition + Vector3.up * (capsuleHeight - capsuleRadius),
-                            capsuleRadius,
+                            0.05f,
                             mantleLayerMask
                         );
 
@@ -172,6 +173,11 @@ namespace StarterAssets
                             targetMantlePosition = downwardHit.point;
                             return true; // 맨틀 가능
                         }
+                        /*
+                        만약 캡슐 충돌 검사 때문에 맨틀 동작이 계속 실패한다면 아래 코드로 대체
+                        targetMantlePosition = downwardHit.point;
+                        return true;
+                        */
                     }
                 }
             }
