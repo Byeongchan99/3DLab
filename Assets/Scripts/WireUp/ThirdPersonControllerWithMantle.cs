@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
@@ -51,10 +52,10 @@ namespace StarterAssets
         public bool Grounded = true;
 
         [Tooltip("Useful for rough ground")]
-        public float GroundedOffset = -0.14f;
+        public float GroundedOffset = -0.1f;
 
         [Tooltip("The radius of the grounded check. Should match the radius of the CharacterController")]
-        public float GroundedRadius = 0.28f;
+        public float GroundedRadius = 0.2f;
 
         [Tooltip("What layers the character uses as ground")]
         public LayerMask GroundLayers;
@@ -123,6 +124,7 @@ namespace StarterAssets
         }
 
         /// <summary> Mantle 관련 변수 </summary>
+        private int _animIDMantle;
         private bool _isMantling = false;
         public LayerMask mantleLayerMask;  // 맨틀 가능한 레이어 설정
         public float rayHeight = 0.9f;  // 트레이스 시작 높이
@@ -139,15 +141,33 @@ namespace StarterAssets
             }
 
             // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
-            Vector3 rayStart = transform.position + transform.forward * -0.1f + Vector3.up * rayHeight;
+            Vector3 rayStartCenter = transform.position + transform.forward * -0.1f + Vector3.up * rayHeight;
             Vector3 rayDirection = transform.forward;
+            float verticalOffset = 0.1f;
 
-            Debug.DrawRay(rayStart, rayDirection * maxReachDistance, Color.red, 0.5f);
+            // 중심, 위, 아래 레이의 시작 지점 계산
+            Vector3 rayStartUpper = rayStartCenter + Vector3.up * verticalOffset;
+            Vector3 rayStartLower = rayStartCenter - Vector3.up * verticalOffset;
 
-            if (Physics.Raycast(rayStart, rayDirection, out RaycastHit hit, maxReachDistance, mantleLayerMask))
+            Debug.DrawRay(rayStartCenter, rayDirection * maxReachDistance, Color.red, 0.5f);
+            Debug.DrawRay(rayStartUpper, rayDirection * maxReachDistance, Color.blue, 0.5f);
+            Debug.DrawRay(rayStartLower, rayDirection * maxReachDistance, Color.blue, 0.5f);
+
+            bool hitDetected = false;
+            RaycastHit hit;
+
+            // 중심, 위, 아래 레이 중 하나라도 충돌하면 히트로 간주
+            if (Physics.Raycast(rayStartCenter, rayDirection, out hit, maxReachDistance, mantleLayerMask) ||
+                Physics.Raycast(rayStartUpper, rayDirection, out hit, maxReachDistance, mantleLayerMask) ||
+                Physics.Raycast(rayStartLower, rayDirection, out hit, maxReachDistance, mantleLayerMask))
+            {
+                hitDetected = true;
+            }
+
+            if (hitDetected)
             {
                 // 2. 충돌 지점에서 위로 이동한 후 아래 방향으로 트레이스
-                Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight + transform.forward * 0.14f;
+                Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight + transform.forward * 0.2f;
 
                 Debug.DrawRay(downwardRayStart, Vector3.down * maxLedgeHeight, Color.green, 0.5f);
                 if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
@@ -195,21 +215,46 @@ namespace StarterAssets
         System.Collections.IEnumerator MantleMovement()
         {
             Debug.Log("맨틀 동작 실행 중");
-            Vector3 startPosition = transform.position;
-            float duration = 1.0f;  // 맨틀 애니메이션의 길이
+            if (_hasAnimator)
+            {
+                _animator.SetBool(_animIDMantle, true);              
+            }
+
+            Vector3 startPosition = targetMantlePosition + (transform.up * -1f) + (transform.forward * -0.4f); // 시작 위치를 애니메이션에 맞게 강제로 이동
+            float duration = 1.666f;  // 맨틀 애니메이션의 길이(총 26프레임, 재생 속도 0.5배속 - 0.833초 * 2)
             float elapsedTime = 0f;
 
-            while (elapsedTime < duration)
+            // 0 ~ 17프레임동안 위로 1만큼 이동
+            float firstPhaseDuration = (17f / 30f) * 2; // 17프레임 (30fps 기준 약 0.567초 * 2)
+            Vector3 firstPhaseTarget = startPosition + transform.up * 1f;
+            while (elapsedTime < firstPhaseDuration)
             {
-                float t = elapsedTime / duration;
-                transform.position = Vector3.Lerp(startPosition, targetMantlePosition, t);
+                transform.position = Vector3.Lerp(startPosition, firstPhaseTarget, elapsedTime / firstPhaseDuration);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
 
+            // 18 ~ 25프레임동안 앞으로 0.4만큼 이동
+            float secondPhaseDuration = (8f / 30f) * 2; // 8프레임 (30fps 기준 약 0.267초 * 2)
+            Vector3 secondPhaseTarget = firstPhaseTarget + transform.forward * 0.4f;
+            elapsedTime = 0f;
+            while (elapsedTime < secondPhaseDuration)
+            {
+                transform.position = Vector3.Lerp(firstPhaseTarget, secondPhaseTarget, elapsedTime / secondPhaseDuration);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            // 최종 위치로 설정
             transform.position = targetMantlePosition;
+
             _isMantling = false;
             // 맨틀 후 캐릭터 상태를 기본 상태(Idle)로 전환
+            if (_hasAnimator)
+            {
+                _animator.SetBool(_animIDMantle, false);
+            }
+            yield return null;
         }
 
         private void Awake()
@@ -268,6 +313,7 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDMantle = Animator.StringToHash("Mantle");
         }
 
         private void GroundedCheck()
