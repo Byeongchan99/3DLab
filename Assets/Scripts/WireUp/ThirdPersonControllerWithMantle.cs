@@ -221,11 +221,11 @@ namespace StarterAssets
             }
 
             Vector3 startPosition = targetMantlePosition + (transform.up * -1f) + (transform.forward * -0.4f); // 시작 위치를 애니메이션에 맞게 강제로 이동
-            float duration = 1.666f;  // 맨틀 애니메이션의 길이(총 26프레임, 재생 속도 0.5배속 - 0.833초 * 2)
+            float duration = 0.833f;  // 맨틀 애니메이션의 길이(총 26프레임, 재생 속도 0.5배속 - 0.833초 * 2)
             float elapsedTime = 0f;
 
             // 0 ~ 17프레임동안 위로 1만큼 이동
-            float firstPhaseDuration = (17f / 30f) * 2; // 17프레임 (30fps 기준 약 0.567초 * 2)
+            float firstPhaseDuration = 17f / 30f; // 17프레임 (30fps 기준 약 0.567초)
             Vector3 firstPhaseTarget = startPosition + transform.up * 1f;
             while (elapsedTime < firstPhaseDuration)
             {
@@ -235,7 +235,7 @@ namespace StarterAssets
             }
 
             // 18 ~ 25프레임동안 앞으로 0.4만큼 이동
-            float secondPhaseDuration = (8f / 30f) * 2; // 8프레임 (30fps 기준 약 0.267초 * 2)
+            float secondPhaseDuration = 8f / 30f; // 8프레임 (30fps 기준 약 0.267초)
             Vector3 secondPhaseTarget = firstPhaseTarget + transform.forward * 0.4f;
             elapsedTime = 0f;
             while (elapsedTime < secondPhaseDuration)
