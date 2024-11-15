@@ -221,7 +221,7 @@ namespace StarterAssets
             }
 
             Vector3 startPosition = targetMantlePosition + (transform.up * -1f) + (transform.forward * -0.4f); // 시작 위치를 애니메이션에 맞게 강제로 이동
-            float duration = 0.833f;  // 맨틀 애니메이션의 길이(총 26프레임, 재생 속도 0.5배속 - 0.833초 * 2)
+            //float duration = 0.833f;  // 맨틀 애니메이션의 길이(총 26프레임, 재생 속도 0.5배속 - 0.833초 * 2)
             float elapsedTime = 0f;
 
             // 0 ~ 17프레임동안 위로 1만큼 이동

@@ -7,7 +7,7 @@ public class RopeAction : MonoBehaviour
     private LineRenderer lineRenderer;
     private Vector3 grapplePoint;
     public LayerMask IsGrappleable;
-    public Transform gunTip, camera, player;
+    public Transform gunTip, aimModeCamera, player;
     private float maxDistance = 100f;
     private SpringJoint joint;
 
@@ -39,7 +39,7 @@ public class RopeAction : MonoBehaviour
     void StartGrapple()
     {
         RaycastHit hit;
-        if (Physics.Raycast(camera.position, camera.forward, out hit, maxDistance, IsGrappleable))
+        if (Physics.Raycast(aimModeCamera.position, aimModeCamera.forward, out hit, maxDistance, IsGrappleable))
         {
             grapplePoint = hit.point;
             joint = player.gameObject.AddComponent<SpringJoint>();
