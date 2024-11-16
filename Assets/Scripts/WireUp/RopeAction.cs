@@ -4,22 +4,30 @@ using UnityEngine;
 
 public class RopeAction : MonoBehaviour
 {
+    public Transform playerCenter;
+    public Transform gunTip;
+    public Camera aimModeCamera;
+    public LayerMask isGrapplingObject;
+    private RaycastHit hit;
     private LineRenderer lineRenderer;
-    private Vector3 grapplePoint;
-    public LayerMask IsGrappleable;
-    public Transform gunTip, aimModeCamera, player;
     private float maxDistance = 100f;
-    private SpringJoint joint;
+    private bool isGrappling = false;
+    private Vector3 spot;
+    private CharacterController characterController;
+    private Vector3 anchorPoint;
+    private float ropeMaxLength = 3f; // 로프 최대 길이 설정
 
     void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
+        characterController = playerCenter.GetComponent<CharacterController>();
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
+            Debug.Log("StartGrapple");
             StartGrapple();
         }
         else if (Input.GetMouseButtonUp(0))
@@ -28,70 +36,70 @@ public class RopeAction : MonoBehaviour
         }
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         DrawRope();
     }
 
-    /// <summary>
-    /// Call whenever we want to start a grapple
-    /// </summary>
     void StartGrapple()
     {
-        RaycastHit hit;
-        if (Physics.Raycast(aimModeCamera.position, aimModeCamera.forward, out hit, maxDistance, IsGrappleable))
+        // 중앙에서 레이를 생성
+        Ray ray = aimModeCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+
+        // 레이캐스트를 발사하고, 결과에 따라 처리
+        if (Physics.Raycast(ray, out hit, maxDistance, isGrapplingObject))
         {
-            grapplePoint = hit.point;
-            joint = player.gameObject.AddComponent<SpringJoint>();
-            joint.autoConfigureConnectedAnchor = false;
-            joint.connectedAnchor = grapplePoint;
+            isGrappling = true;
 
-            float distanceFromPoint = Vector3.Distance(player.position, grapplePoint);
-
-            //The distance grapple will try to keep from grapple point. 
-            joint.maxDistance = distanceFromPoint * 0.8f;
-            joint.minDistance = distanceFromPoint * 0.25f;
-
-            //Adjust these values to fit your game.
-            joint.spring = 4.5f;
-            joint.damper = 7f;
-            joint.massScale = 4.5f;
-
+            spot = hit.point;
             lineRenderer.positionCount = 2;
-            currentGrapplePosition = gunTip.position;
+            lineRenderer.SetPosition(0, gunTip.position);
+            lineRenderer.SetPosition(1, hit.point);
+            lineRenderer.enabled = true;
+
+            anchorPoint = spot; // 매달릴 지점 설정
         }
     }
-
 
     /// <summary>
     /// Call whenever we want to stop a grapple
     /// </summary>
     void StopGrapple()
     {
+        isGrappling = false;
         lineRenderer.positionCount = 0;
-        Destroy(joint);
+        lineRenderer.enabled = false;
     }
-
-    private Vector3 currentGrapplePosition;
 
     void DrawRope()
     {
-        //If not grappling, don't draw rope
-        if (!joint) return;
-
-        currentGrapplePosition = Vector3.Lerp(currentGrapplePosition, grapplePoint, Time.deltaTime * 8f);
-
-        lineRenderer.SetPosition(0, gunTip.position);
-        lineRenderer.SetPosition(1, currentGrapplePosition);
+        if (isGrappling)
+        {
+            lineRenderer.SetPosition(0, gunTip.position);
+            lineRenderer.SetPosition(1, spot);
+        }
     }
 
-    public bool IsGrappling()
+    void FixedUpdate()
     {
-        return joint != null;
+        if (isGrappling)
+        {
+            ApplyHangingEffect();
+        }
     }
 
-    public Vector3 GetGrapplePoint()
+    void ApplyHangingEffect()
     {
-        return grapplePoint;
+        // 현재 위치와 목표 지점 간의 방향 계산
+        Vector3 directionToAnchor = anchorPoint - playerCenter.position;
+        float distanceToAnchor = directionToAnchor.magnitude;
+
+        // 로프 최대 길이를 초과하지 않도록 이동 제한
+        if (distanceToAnchor > ropeMaxLength)
+        {
+            directionToAnchor.Normalize();
+            Vector3 movement = directionToAnchor * (distanceToAnchor - ropeMaxLength);
+            characterController.Move(movement * Time.deltaTime);
+        }
     }
 }
