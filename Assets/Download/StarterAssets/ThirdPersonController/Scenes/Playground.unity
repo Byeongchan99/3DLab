@@ -799,6 +799,60 @@ LightProbeGroup:
   - {x: 7.1518564, y: 2.7763042, z: -11.2319765}
   - {x: 8.993203, y: 2.3566551, z: -8.796325}
   m_Dering: 1
+--- !u!1 &974149325 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3045499151345629243, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+  m_PrefabInstance: {fileID: 1629636537}
+  m_PrefabAsset: {fileID: 0}
+--- !u!120 &974149327 stripped
+LineRenderer:
+  m_CorrespondingSourceObject: {fileID: 9212000931890673109, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+  m_PrefabInstance: {fileID: 1629636537}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &974149331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974149325}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e39d8d270d94f44aa933cdd4e6a63bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  whatIsGrappleable:
+    serializedVersion: 2
+    m_Bits: 64
+  gunTip: {fileID: 1358762155}
+  player: {fileID: 1629636547}
+  cam: {fileID: 1628222881}
+--- !u!114 &974149332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974149325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62306f53db6e5b14694b7e68451c004e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 1628222881}
+  gunTip: {fileID: 1358762155}
+  whatIsGrappleable:
+    serializedVersion: 2
+    m_Bits: 64
+  lr: {fileID: 974149327}
+  characterController: {fileID: 1629636540}
+  maxGrappleDistance: 30
+  grappleDelayTime: 0
+  overshootYAxis: 2
+  grapplingCd: 1
+  grappleKey: 324
+  rb: {fileID: 1629636541}
+  pullForce: 1500
 --- !u!1 &1028513131
 GameObject:
   m_ObjectHideFlags: 0
@@ -1037,6 +1091,11 @@ MonoBehaviour:
   m_AmplitudeGain: 0.5
   m_FrequencyGain: 0.3
   mNoiseOffsets: {x: 0, y: 0, z: 0}
+--- !u!4 &1358762155 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8229115785133585722, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+  m_PrefabInstance: {fileID: 1629636537}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1402827283
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1242,13 +1301,29 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1418538437}
     - target: {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+      propertyPath: rb
+      value: 
+      objectReference: {fileID: 1629636541}
+    - target: {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
       propertyPath: cam
       value: 
       objectReference: {fileID: 1628222881}
     - target: {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+      propertyPath: grapplingCd
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+      propertyPath: overshootYAxis
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+      propertyPath: grappleDelayTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
       propertyPath: characterController
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1629636540}
     - target: {fileID: 7724890331847143013, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
       propertyPath: m_Name
       value: PlayerArmature2
@@ -1301,6 +1376,7 @@ PrefabInstance:
     - {fileID: 7583331145113933833, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
     - {fileID: 3680260916440791340, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
     - {fileID: 8798049546079766253, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+    - {fileID: 6099418104205647019, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 9090748421874256189, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
@@ -1313,6 +1389,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7724890331847143013, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
       insertIndex: 3
       addedObject: {fileID: 1629636540}
+    - targetCorrespondingSourceObject: {fileID: 3045499151345629243, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 974149331}
+    - targetCorrespondingSourceObject: {fileID: 3045499151345629243, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
+      insertIndex: 4
+      addedObject: {fileID: 974149332}
   m_SourcePrefab: {fileID: 100100000, guid: 93421fdd0b9b53b47b46d2208e03e5a0, type: 3}
 --- !u!4 &1629636538 stripped
 Transform:
@@ -1354,7 +1436,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: a3194b8bbc96ef84fab1f98f4b7dae3e, type: 3}
   FootstepAudioVolume: 0.5
   JumpHeight: 1.2
-  Gravity: -15
+  Gravity: -9.8
   JumpTimeout: 0.1
   FallTimeout: 0.15
   Grounded: 1
@@ -1382,7 +1464,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1629636539}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.5
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -1396,7 +1478,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 1
   m_Constraints: 112

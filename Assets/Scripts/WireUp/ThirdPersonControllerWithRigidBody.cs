@@ -152,9 +152,15 @@ namespace StarterAssets
             _fallTimeoutDelta = FallTimeout;
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             _hasAnimator = TryGetComponent(out _animator);
+
+            if (_isMantling)
+            {
+                Debug.Log("¸ÇÆ² Áß");
+                return;
+            }
 
             JumpAndGravity();
             GroundedCheck();
@@ -173,6 +179,7 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDMantle = Animator.StringToHash("Mantle");
         }
 
         private void GroundedCheck()
