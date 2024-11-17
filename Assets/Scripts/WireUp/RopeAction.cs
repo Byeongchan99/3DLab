@@ -4,36 +4,45 @@ using UnityEngine;
 
 public class RopeAction : MonoBehaviour
 {
-    public Transform playerCenter;
+    [Header("References")]
+    public CharacterController characterController;
+    public Camera cam;
     public Transform gunTip;
-    public Camera aimModeCamera;
-    public LayerMask isGrapplingObject;
-    private RaycastHit hit;
-    private LineRenderer lineRenderer;
-    private float maxDistance = 100f;
-    private bool isGrappling = false;
-    private Vector3 spot;
-    private CharacterController characterController;
-    private Vector3 anchorPoint;
-    private float ropeMaxLength = 3f; // 로프 최대 길이 설정
+    public LayerMask whatIsGrappleable;
+    public LineRenderer lr;
 
-    void Awake()
+    [Header("Grappling")]
+    public float maxGrappleDistance;
+    public float grappleDelayTime;
+    public float ropeMaxLength = 3f; // 로프 최대 길이 설정
+
+    private Vector3 grapplePoint;
+
+    [Header("Cooldown")]
+    public float grapplingCd;
+    private float grapplingCdTimer;
+
+    [Header("Input")]
+    public KeyCode grappleKey = KeyCode.Mouse1;
+
+    private bool grappling;
+    private Vector3 anchorPoint;
+
+    private void Awake()
     {
-        lineRenderer = GetComponent<LineRenderer>();
-        characterController = playerCenter.GetComponent<CharacterController>();
+        lr = GetComponent<LineRenderer>();
     }
 
-    void Update()
+    private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("StartGrapple");
             StartGrapple();
         }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            StopGrapple();
-        }
+
+        if (grapplingCdTimer > 0)
+            grapplingCdTimer -= Time.deltaTime;
     }
 
     private void LateUpdate()
@@ -41,65 +50,76 @@ public class RopeAction : MonoBehaviour
         DrawRope();
     }
 
-    void StartGrapple()
+    private void StartGrapple()
     {
-        // 중앙에서 레이를 생성
-        Ray ray = aimModeCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        if (grapplingCdTimer > 0) return;
 
-        // 레이캐스트를 발사하고, 결과에 따라 처리
-        if (Physics.Raycast(ray, out hit, maxDistance, isGrapplingObject))
+        Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, maxGrappleDistance, whatIsGrappleable))
         {
-            isGrappling = true;
+            grapplePoint = hit.point;
+            grappling = true;
 
-            spot = hit.point;
-            lineRenderer.positionCount = 2;
-            lineRenderer.SetPosition(0, gunTip.position);
-            lineRenderer.SetPosition(1, hit.point);
-            lineRenderer.enabled = true;
+            lr.positionCount = 2;
+            lr.SetPosition(0, gunTip.position);
+            lr.SetPosition(1, grapplePoint);
+            lr.enabled = true;
 
-            anchorPoint = spot; // 매달릴 지점 설정
+            anchorPoint = grapplePoint;
+
+            Invoke(nameof(ExecuteGrapple), grappleDelayTime);
         }
     }
 
-    /// <summary>
-    /// Call whenever we want to stop a grapple
-    /// </summary>
-    void StopGrapple()
+    private void ExecuteGrapple()
     {
-        isGrappling = false;
-        lineRenderer.positionCount = 0;
-        lineRenderer.enabled = false;
+        Vector3 directionToGrapplePoint = (grapplePoint - transform.position).normalized;
+        float distanceToGrapplePoint = Vector3.Distance(transform.position, grapplePoint);
+
+        StartCoroutine(GrappleMovement(directionToGrapplePoint, distanceToGrapplePoint));
     }
 
-    void DrawRope()
+    private IEnumerator GrappleMovement(Vector3 direction, float distance)
     {
-        if (isGrappling)
+        float currentDistance = 0f;
+
+        while (currentDistance < distance && grappling && currentDistance < ropeMaxLength)
         {
-            lineRenderer.SetPosition(0, gunTip.position);
-            lineRenderer.SetPosition(1, spot);
+            characterController.Move(direction * Time.deltaTime * 20f); // Adjust speed as needed
+            currentDistance += direction.magnitude * Time.deltaTime * 20f;
+            lr.SetPosition(0, gunTip.position);
+            yield return null;
+        }
+
+        StopGrapple();
+    }
+
+    public void StopGrapple()
+    {
+        grappling = false;
+        lr.positionCount = 0;
+        lr.enabled = false;
+        grapplingCdTimer = grapplingCd;
+    }
+
+    private void DrawRope()
+    {
+        if (grappling)
+        {
+            lr.SetPosition(0, gunTip.position);
+            lr.SetPosition(1, grapplePoint);
         }
     }
 
-    void FixedUpdate()
+    public bool IsGrappling()
     {
-        if (isGrappling)
-        {
-            ApplyHangingEffect();
-        }
+        return grappling;
     }
 
-    void ApplyHangingEffect()
+    public Vector3 GetGrapplePoint()
     {
-        // 현재 위치와 목표 지점 간의 방향 계산
-        Vector3 directionToAnchor = anchorPoint - playerCenter.position;
-        float distanceToAnchor = directionToAnchor.magnitude;
-
-        // 로프 최대 길이를 초과하지 않도록 이동 제한
-        if (distanceToAnchor > ropeMaxLength)
-        {
-            directionToAnchor.Normalize();
-            Vector3 movement = directionToAnchor * (distanceToAnchor - ropeMaxLength);
-            characterController.Move(movement * Time.deltaTime);
-        }
+        return grapplePoint;
     }
 }
