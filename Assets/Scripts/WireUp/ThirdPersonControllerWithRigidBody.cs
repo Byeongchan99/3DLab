@@ -50,12 +50,13 @@ namespace StarterAssets
         [Header("Player Grounded")]
         [Tooltip("If the character is grounded or not. Not part of the Rigidbody built in grounded check")]
         public bool Grounded = true;
+        public bool WallAttached = false; // 추가된 벽 체크 상태 변수
 
         [Tooltip("Useful for rough ground")]
-        public float GroundedOffset = -0.14f;
+        public float GroundedOffset = -0.1f;
 
         [Tooltip("The radius of the grounded check. Should match the radius of the Rigidbody collider")]
-        public float GroundedRadius = 0.28f;
+        public float GroundedRadius = 0.2f;
 
         [Tooltip("What layers the character uses as ground")]
         public LayerMask GroundLayers;
@@ -163,7 +164,8 @@ namespace StarterAssets
             }
 
             JumpAndGravity();
-            GroundedCheck();
+            //GroundedCheck();
+            GroundedAndWallCheck();
             Move();
         }
 
@@ -196,6 +198,46 @@ namespace StarterAssets
                 _animator.SetBool(_animIDGrounded, Grounded);
             }
         }
+
+        private void GroundedAndWallCheck()
+        {
+            // set sphere position, with offset
+            Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z);
+
+            // 바닥 체크
+            Collider[] hitColliders = Physics.OverlapSphere(spherePosition, GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
+
+            bool isGrounded = false;
+            bool isTouchingWall = false;
+
+            foreach (var hitCollider in hitColliders)
+            {
+                Vector3 contactNormal = hitCollider.ClosestPoint(transform.position) - transform.position;
+                float angle = Vector3.Angle(contactNormal, Vector3.up);
+
+                if (angle < 60f)
+                {
+                    // 45도 이하의 각도: 바닥으로 간주
+                    isGrounded = true;
+                }
+                else if (angle >= 60f && angle < 120f)
+                {
+                    // 45도 이상 135도 미만의 각도: 벽으로 간주
+                    isTouchingWall = true;
+                }
+            }
+
+            // 상태 업데이트
+            Grounded = isGrounded;
+            WallAttached = isTouchingWall; // 추가된 벽 체크 상태 변수
+
+            // 애니메이터 업데이트
+            if (_hasAnimator)
+            {
+                _animator.SetBool(_animIDGrounded, Grounded);
+            }
+        }
+
 
         private void CameraRotation()
         {
@@ -277,9 +319,9 @@ namespace StarterAssets
                 }
 
                 // Jump
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f)
+                if (_input.jump && _jumpTimeoutDelta <= 0.0f && Grounded && !WallAttached)
                 {
-                    // the square root of H * -2 * G = how much velocity needed to reach desired height
+                    // 점프 로직 - 바닥에 붙어 있는 경우에만 점프 가능
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
 
                     // update animator if using character
