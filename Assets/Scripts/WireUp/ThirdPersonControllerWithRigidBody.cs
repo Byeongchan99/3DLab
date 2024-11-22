@@ -212,18 +212,35 @@ namespace StarterAssets
 
             foreach (var hitCollider in hitColliders)
             {
-                Vector3 contactNormal = hitCollider.ClosestPoint(transform.position) - transform.position;
-                float angle = Vector3.Angle(contactNormal, Vector3.up);
+                if (hitCollider == null) continue;
 
-                if (angle < 60f)
+                // 바닥 레이어라면
+                if (hitCollider.CompareTag("Ground"))
                 {
-                    // 45도 이하의 각도: 바닥으로 간주
                     isGrounded = true;
+                    break;
                 }
-                else if (angle >= 60f && angle < 120f)
+                
+                //Debug.Log(hitCollider.name);
+                Vector3 closestPoint = hitCollider.ClosestPoint(spherePosition); // 콜라이더에서 캐릭터 위치와 가장 가까운 지점
+
+                // 충돌한 콜라이더의 표면 방향을 구하기 위해 Raycast 사용
+                RaycastHit hit;
+                if (Physics.Raycast(spherePosition, hitCollider.transform.position - closestPoint, out hit, GroundedRadius, GroundLayers))
                 {
-                    // 45도 이상 135도 미만의 각도: 벽으로 간주
-                    isTouchingWall = true;
+                    // 표면의 법선 벡터로 각도 계산
+                    float angle = Vector3.Angle(hit.normal, Vector3.up);
+
+                    if (angle < 60f)
+                    {
+                        // 60도 이하의 각도: 바닥으로 간주
+                        isGrounded = true;
+                    }
+                    else if (angle >= 60f && angle < 120f)
+                    {
+                        // 60도 이상 120도 미만의 각도: 벽으로 간주
+                        isTouchingWall = true;
+                    }
                 }
             }
 
@@ -237,7 +254,6 @@ namespace StarterAssets
                 _animator.SetBool(_animIDGrounded, Grounded);
             }
         }
-
 
         private void CameraRotation()
         {

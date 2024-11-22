@@ -26,6 +26,7 @@ public class RopeAction : MonoBehaviour
     [Header("Input")]
     public KeyCode grappleKey = KeyCode.Mouse1;
 
+    public bool aimMode = false; // 조준 모드
     private bool isGrappling;
     private SpringJoint joint;
     public Rigidbody rb;
@@ -39,7 +40,7 @@ public class RopeAction : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && aimMode == true && isGrappling == false)
         {
             Debug.Log("StartGrapple");
             StartGrapple();
