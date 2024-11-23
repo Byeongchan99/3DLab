@@ -61,7 +61,7 @@ public class RopeAction : MonoBehaviour
         // FixedUpdate에서 그래플링 힘을 적용
         if (isGrappling)
         {
-            ApplyGrapplingForce();
+            //ApplyGrapplingForce();
         }
     }
 
@@ -118,6 +118,7 @@ public class RopeAction : MonoBehaviour
         isGrappling = true;
     }
 
+    /*
     private void ApplyGrapplingForce()
     {
         // 플레이어 Rigidbody에 힘을 가함
@@ -129,6 +130,7 @@ public class RopeAction : MonoBehaviour
             rb.AddForce(directionToGrapplePoint * pullForce * Time.fixedDeltaTime, ForceMode.VelocityChange);
         }
     }
+    */
 
     public void StopGrapple()
     {
