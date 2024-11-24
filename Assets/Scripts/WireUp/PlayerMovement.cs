@@ -8,51 +8,67 @@ using StarterAssets;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    private float moveSpeed;
-    public float walkSpeed;
-    public float sprintSpeed;
-    public float swingSpeed;
+    private float moveSpeed; // 현재 이동 속도
+    public float walkSpeed; // 걷기 속도
+    public float sprintSpeed; // 달리기 속도
+    public float swingSpeed; // 스윙 속도
+    private float _targetRotation = 0.0f;
+    private float _rotationVelocity;
+    private float _verticalVelocity;
+    private float _terminalVelocity = 53.0f;
 
     public float groundDrag;
 
     [Header("Jumping")]
-    public float jumpForce;
+    public float JumpHeight = 1.2f;
+    //public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
     bool readyToJump;
+    public float Gravity = -15.0f;
 
     /*
     [Header("Crouching")]
     public float crouchSpeed;
     public float crouchYScale;
     private float startYScale;
-    */
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode sprintKey = KeyCode.LeftShift;
     public KeyCode crouchKey = KeyCode.LeftControl;
+    */
 
     [Header("Ground Check")]
     public Transform playerCenter;
     public float playerHeight;
-    public LayerMask whatIsGround;
+    public LayerMask GroundLayers; // 지면 레이어
     bool grounded;
+
+    public float JumpTimeout = 0.50f;
+    public float FallTimeout = 0.15f;
 
     [Header("Slope Handling")]
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
 
+    [Header("Audio")]
+    public AudioClip LandingAudioClip;
+    public AudioClip[] FootstepAudioClips;
+    [Range(0, 1)] public float FootstepAudioVolume = 0.5f;
+
     [Header("Camera")]
-    public GameObject CinemachineCameraTarget;
+    [Tooltip("How fast the character turns to face movement direction")]
+    [Range(0.0f, 0.3f)]
+    public float RotationSmoothTime = 0.12f;
     public float TopClamp = 70.0f;
     public float BottomClamp = -30.0f;
     public float CameraAngleOverride = 0.0f;
     public bool LockCameraPosition = false;
 
-    private GameObject _mainCamera;
     // cinemachine
+    public GameObject CinemachineCameraTarget;
     private float _cinemachineTargetYaw;
     private float _cinemachineTargetPitch;
 
@@ -60,14 +76,12 @@ public class PlayerMovement : MonoBehaviour
     //public PlayerCam cam;
     public float grappleFov = 95f;
 
-    public Transform orientation;
+    //public Transform orientation;
 
     float horizontalInput;
     float verticalInput;
 
     Vector3 moveDirection;
-
-    Rigidbody rb;
 
     public MovementState state;
     public enum MovementState
@@ -86,24 +100,31 @@ public class PlayerMovement : MonoBehaviour
     public bool activeGrapple;
     public bool swinging;
 
-    //
-    private Animator _animator;
-    private StarterAssetsInputs _input;
+    // timeout deltatime
+    private float _jumpTimeoutDelta;
+    private float _fallTimeoutDelta;
 
+    // animation IDs
     private int _animIDSpeed;
     private int _animIDGrounded;
     private int _animIDJump;
+    private int _animIDFreeFall;
     private int _animIDMotionSpeed;
+
+    //
+    private PlayerInput _playerInput;
+    private Animator _animator;
+    private Rigidbody _rigidbody;
+    private StarterAssetsInputs _input;
+    private GameObject _mainCamera;
 
     private const float _threshold = 0.01f;
 
-    private bool enableMovementOnNextTouch;
-    private Vector3 velocityToSet;
-    //
+    private bool _hasAnimator;
 
     private void Awake()
     {
-        // get a reference to our main camera
+        // 메인 카메라 참조
         if (_mainCamera == null)
         {
             _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -112,33 +133,39 @@ public class PlayerMovement : MonoBehaviour
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
+        _rigidbody = GetComponent<Rigidbody>();
+        _rigidbody.freezeRotation = true;
 
         readyToJump = true;
 
-        _animator = GetComponent<Animator>();
+        _hasAnimator = TryGetComponent(out _animator);
         _input = GetComponent<StarterAssetsInputs>();
 
         _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
         //startYScale = transform.localScale.y;
+
+        AssignAnimationIDs(); // 애니메이션 ID 할당
+
+        _jumpTimeoutDelta = JumpTimeout;
+        _fallTimeoutDelta = FallTimeout;
     }
 
     private void Update()
     {
         // ground check
-        grounded = Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        grounded = Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.2f, GroundLayers);
 
-        MyInput();
+        //PlayerInput();
+        Jump();
         SpeedControl();
         StateHandler();
 
         // handle drag
         if (grounded && !activeGrapple)
-            rb.drag = groundDrag;
+            _rigidbody.drag = groundDrag;
         else
-            rb.drag = 0;
+            _rigidbody.drag = 0;
 
         //TextStuff();
 
@@ -166,22 +193,22 @@ public class PlayerMovement : MonoBehaviour
         _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
     }
 
-    private void MyInput()
+    /*
+    private void PlayerInput()
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
-
+        
         // when to jump
-        if (Input.GetKey(jumpKey) && readyToJump && grounded)
+        if (_input.jump && readyToJump && grounded)
         {
             readyToJump = false;
 
             Jump();
 
-            Invoke(nameof(ResetJump), jumpCooldown);
+            //Invoke(nameof(ResetJump), jumpCooldown);
         }
-
-        /*
+       
         // start crouch
         if (Input.GetKeyDown(crouchKey))
         {
@@ -194,8 +221,8 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         }
-        */
     }
+    */
 
     private void StateHandler()
     {
@@ -204,7 +231,7 @@ public class PlayerMovement : MonoBehaviour
         {
             state = MovementState.freeze;
             moveSpeed = 0;
-            rb.velocity = Vector3.zero;
+            _rigidbody.velocity = Vector3.zero;
         }
 
         // Mode - Grappling
@@ -231,7 +258,7 @@ public class PlayerMovement : MonoBehaviour
         */
 
         // Mode - Sprinting
-        else if (grounded && Input.GetKey(sprintKey))
+        else if (grounded && _input.sprint)
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
@@ -262,28 +289,61 @@ public class PlayerMovement : MonoBehaviour
         if (activeGrapple) return;
         if (swinging) return;
 
+        // if there is no input, set the target speed to 0
+        if (_input.move == Vector2.zero) moveSpeed = 0.0f;
+
+        float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+
         // calculate movement direction
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+        //moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+
+        // normalise input direction
+        Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+
+        // if there is a move input rotate player when the player is moving
+        // 카메라에 따라 이동 방향 회전
+        if (_input.move != Vector2.zero)
+        {
+            _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
+                              _mainCamera.transform.eulerAngles.y;
+            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
+                RotationSmoothTime);
+
+            // rotate to face input direction relative to camera position
+            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+        }
 
         // on slope
         if (OnSlope() && !exitingSlope)
         {
-            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+            _rigidbody.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
 
-            if (rb.velocity.y > 0)
-                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
+            if (_rigidbody.velocity.y > 0)
+                _rigidbody.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
 
         // on ground
         else if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        {
+            //_rigidbody.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+            // move the player
+            _rigidbody.velocity = targetDirection.normalized * (moveSpeed * inputMagnitude) + new Vector3(0.0f, _rigidbody.velocity.y, 0.0f);
+        }
 
         // in air
         else if (!grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            _rigidbody.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
         // turn gravity off while on slope
-        rb.useGravity = !OnSlope();
+        _rigidbody.useGravity = !OnSlope();
+
+        // update animator if using character
+        if (_hasAnimator)
+        {
+            _animator.SetFloat(_animIDSpeed, moveSpeed);
+            _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+        }
     }
 
     private void SpeedControl()
@@ -293,38 +353,103 @@ public class PlayerMovement : MonoBehaviour
         // limiting speed on slope
         if (OnSlope() && !exitingSlope)
         {
-            if (rb.velocity.magnitude > moveSpeed)
-                rb.velocity = rb.velocity.normalized * moveSpeed;
+            if (_rigidbody.velocity.magnitude > moveSpeed)
+                _rigidbody.velocity = _rigidbody.velocity.normalized * moveSpeed;
         }
 
         // limiting speed on ground or in air
         else
         {
-            Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+            Vector3 flatVel = new Vector3(_rigidbody.velocity.x, 0f, _rigidbody.velocity.z);
 
             // limit velocity if needed
             if (flatVel.magnitude > moveSpeed)
             {
                 Vector3 limitedVel = flatVel.normalized * moveSpeed;
-                rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
+                _rigidbody.velocity = new Vector3(limitedVel.x, _rigidbody.velocity.y, limitedVel.z);
             }
         }
     }
 
     private void Jump()
     {
-        exitingSlope = true;
+        if (grounded)
+        {
+            // 낙하 타임아웃 리셋
+            _fallTimeoutDelta = FallTimeout;
+
+            // 애니메이터 업데이트
+            if (_hasAnimator)
+            {
+                _animator.SetBool(_animIDJump, false);
+                _animator.SetBool(_animIDFreeFall, false);
+            }
+
+            // 수직 속도 안정화
+            if (_verticalVelocity < 0.0f)
+            {
+                _verticalVelocity = -2f;
+            }
+
+            // 점프 처리
+            if (_input.jump && readyToJump && grounded)
+            {
+                exitingSlope = true;
+                _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+
+                readyToJump = false; // 점프 후 재점프 방지
+                _jumpTimeoutDelta = JumpTimeout; // 쿨다운 타이머 초기화
+
+                // 애니메이터 업데이트
+                if (_hasAnimator)
+                {
+                    _animator.SetBool(_animIDJump, true);
+                }
+            }
+        }
+        else
+        {
+            // 점프 타임아웃 리셋
+            _jumpTimeoutDelta = JumpTimeout;
+
+            // 낙하 타임아웃 감소 및 애니메이터 업데이트
+            if (_fallTimeoutDelta >= 0.0f)
+            {
+                _fallTimeoutDelta -= Time.deltaTime;
+            }
+            else
+            {
+                if (_hasAnimator)
+                {
+                    _animator.SetBool(_animIDFreeFall, true);
+                }
+            }
+
+            // 공중에서 점프 입력 무시
+            _input.jump = false;
+        }
+
+        // 쿨다운 타이머 감소 및 ResetJump 호출
+        if (!readyToJump)
+        {
+            if (_jumpTimeoutDelta > 0.0f)
+            {
+                _jumpTimeoutDelta -= Time.deltaTime;
+            }
+            else
+            {
+                ResetJump();
+            }
+        }
+
+        //exitingSlope = true;
 
         // reset y velocity
-        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+        //_rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0f, _rigidbody.velocity.z);
 
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-
-        if (_animator)
-        {
-            _animator.SetBool(_animIDJump, true);
-        }
+        //_rigidbody.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
+
     private void ResetJump()
     {
         readyToJump = true;
@@ -354,6 +479,7 @@ public class PlayerMovement : MonoBehaviour
         return Mathf.Clamp(angle, min, max);
     }
 
+    private bool enableMovementOnNextTouch;
     public void JumpToPosition(Vector3 targetPosition, float trajectoryHeight)
     {
         activeGrapple = true;
@@ -364,10 +490,11 @@ public class PlayerMovement : MonoBehaviour
         Invoke(nameof(ResetRestrictions), 3f);
     }
 
+    private Vector3 velocityToSet;
     private void SetVelocity()
     {
         enableMovementOnNextTouch = true;
-        rb.velocity = velocityToSet;
+        _rigidbody.velocity = velocityToSet;
 
         //cam.DoFov(grappleFov);
     }
