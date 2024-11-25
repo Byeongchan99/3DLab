@@ -23,7 +23,7 @@ namespace StarterAssets
 
 		[Header("Character Controller Reference")]
 		//public ThirdPersonControllerWithMantle characterController; // 캐릭터 컨트롤러 참조
-		public ThirdPersonControllerWithRigidbody characterController;
+		public PlayerMovement characterController;
 
         [Header("Mantle Settings")]
         private bool mantleAttempted = false;  // 맨틀 동작 시도를 추적하기 위한 플래그

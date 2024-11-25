@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
 using StarterAssets;
+using UnityEngine.InputSystem.XR;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -44,6 +45,7 @@ public class PlayerMovement : MonoBehaviour
     public float playerHeight;
     public LayerMask GroundLayers; // 지면 레이어
     [SerializeField] bool grounded;
+    public float groundCheckBoxSize = 0.4f;
 
     public float JumpTimeout = 0.50f;
     public float FallTimeout = 0.15f;
@@ -91,7 +93,8 @@ public class PlayerMovement : MonoBehaviour
         swinging,
         walking,
         sprinting,
-        crouching,
+        //crouching,
+        mantling,
         air
     }
 
@@ -154,10 +157,19 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         // ground check
-        grounded = Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.2f, GroundLayers);
+        Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
+        grounded = (Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers) 
+            && Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.05f, GroundLayers));
+
+        if (_isMantling)
+        {
+            Debug.Log("맨틀 중");
+            return;
+        }
 
         //PlayerInput();
-        Jump();
+        //MovePlayer();
+        //Jump();
         SpeedControl();
         StateHandler();
 
@@ -178,6 +190,7 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
+        Jump();
     }
 
     private void LateUpdate()
@@ -192,7 +205,7 @@ public class PlayerMovement : MonoBehaviour
         _animIDJump = Animator.StringToHash("Jump");
         _animIDFreeFall = Animator.StringToHash("FreeFall");
         _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
-        //_animIDMantle = Animator.StringToHash("Mantle");
+        _animIDMantle = Animator.StringToHash("Mantle");
     }
 
     /*
@@ -248,6 +261,12 @@ public class PlayerMovement : MonoBehaviour
         {
             state = MovementState.swinging;
             moveSpeed = swingSpeed;
+        }
+
+        // Mode - Mantling
+        else if (_input.mantle)
+        {
+            state = MovementState.mantling;
         }
 
         /*
@@ -557,6 +576,34 @@ public class PlayerMovement : MonoBehaviour
         return velocityXZ + velocityY;
     }
 
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
+        Gizmos.DrawWireCube(transform.position, boxSize);
+        Gizmos.DrawRay(playerCenter.position, Vector3.down * (playerHeight * 0.5f + 0.05f));
+    }
+
+    private void OnFootstep(AnimationEvent animationEvent)
+    {
+        if (animationEvent.animatorClipInfo.weight > 0.5f)
+        {
+            if (FootstepAudioClips.Length > 0)
+            {
+                var index = Random.Range(0, FootstepAudioClips.Length);
+                AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.position, FootstepAudioVolume);
+            }
+        }
+    }
+
+    private void OnLand(AnimationEvent animationEvent)
+    {
+        if (animationEvent.animatorClipInfo.weight > 0.5f)
+        {
+            AudioSource.PlayClipAtPoint(LandingAudioClip, transform.position, FootstepAudioVolume);
+        }
+    }
+
     /*
     #region Text & Debugging
 
@@ -584,4 +631,138 @@ public class PlayerMovement : MonoBehaviour
 
     #endregion
     */
+
+    /// <summary> Mantle 관련 변수 </summary>
+    private int _animIDMantle;
+    private bool _isMantling = false;
+    public LayerMask mantleLayerMask;  // 맨틀 가능한 레이어 설정
+    public float rayHeight = 0.9f;  // 트레이스 시작 높이
+    public float maxReachDistance = 0.5f;  // 전방 트레이스 최대 거리
+    public float maxLedgeHeight = 0.9f;  // 맨틀 가능한 장애물 최대 높이
+    private Vector3 targetMantlePosition;
+
+    public bool CanPerformMantle()
+    {
+        if (_isMantling)
+        {
+            Debug.Log("이미 맨틀하는 중");
+            return false; // 이미 맨틀 중이면 맨틀 불가
+        }
+
+        // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
+        Vector3 rayStartCenter = transform.position + transform.forward * -0.1f + Vector3.up * rayHeight;
+        Vector3 rayDirection = transform.forward;
+        float verticalOffset = 0.1f;
+
+        // 중심, 위, 아래 레이의 시작 지점 계산
+        Vector3 rayStartUpper = rayStartCenter + Vector3.up * verticalOffset;
+        Vector3 rayStartLower = rayStartCenter - Vector3.up * verticalOffset;
+
+        Debug.DrawRay(rayStartCenter, rayDirection * maxReachDistance, Color.red, 0.5f);
+        Debug.DrawRay(rayStartUpper, rayDirection * maxReachDistance, Color.blue, 0.5f);
+        Debug.DrawRay(rayStartLower, rayDirection * maxReachDistance, Color.blue, 0.5f);
+
+        bool hitDetected = false;
+        RaycastHit hit;
+
+        // 중심, 위, 아래 레이 중 하나라도 충돌하면 히트로 간주
+        if (Physics.Raycast(rayStartCenter, rayDirection, out hit, maxReachDistance, mantleLayerMask) ||
+            Physics.Raycast(rayStartUpper, rayDirection, out hit, maxReachDistance, mantleLayerMask) ||
+            Physics.Raycast(rayStartLower, rayDirection, out hit, maxReachDistance, mantleLayerMask))
+        {
+            hitDetected = true;
+        }
+
+        if (hitDetected)
+        {
+            // 2. 충돌 지점에서 위로 이동한 후 아래 방향으로 트레이스
+            Vector3 downwardRayStart = hit.point + Vector3.up * maxLedgeHeight + transform.forward * 0.2f;
+
+            Debug.DrawRay(downwardRayStart, Vector3.down * maxLedgeHeight, Color.green, 0.5f);
+            if (Physics.Raycast(downwardRayStart, Vector3.down, out RaycastHit downwardHit, maxLedgeHeight))
+            {
+                // 3. 표면이 평평한지 확인
+                if (downwardHit.normal.y > 0.6f)
+                {
+
+                    // 4. 캡슐 충돌 검사로 충분한 공간이 있는지 확인(끼임 방지)
+                    Vector3 capsulePosition = downwardHit.point;
+                    float capsuleHeight = 1.8f;
+                    float capsuleRadius = 0.2f;
+
+                    bool hasRoom = !Physics.CheckCapsule(
+                        capsulePosition + Vector3.up * capsuleRadius,
+                        capsulePosition + Vector3.up * (capsuleHeight - capsuleRadius),
+                        0.05f,
+                        mantleLayerMask
+                    );
+
+                    if (hasRoom)
+                    {
+                        targetMantlePosition = downwardHit.point;
+                        return true; // 맨틀 가능
+                    }
+                    /*
+                    만약 캡슐 충돌 검사 때문에 맨틀 동작이 계속 실패한다면 아래 코드로 대체
+                    targetMantlePosition = downwardHit.point;
+                    return true;
+                    */
+                }
+            }
+        }
+
+        return false; // 맨틀 불가
+    }
+
+    public void StartMantle()
+    {
+        Debug.Log("맨틀 시작");
+        _isMantling = true;
+        StartCoroutine(MantleMovement());
+    }
+
+    System.Collections.IEnumerator MantleMovement()
+    {
+        Debug.Log("맨틀 동작 실행 중");
+        if (_hasAnimator)
+        {
+            _animator.SetBool(_animIDMantle, true);
+        }
+
+        Vector3 startPosition = targetMantlePosition + (transform.up * -1f) + (transform.forward * -0.4f); // 시작 위치를 애니메이션에 맞게 강제로 이동
+                                                                                                           //float duration = 0.833f;  // 맨틀 애니메이션의 길이(총 26프레임, 재생 속도 0.5배속 - 0.833초 * 2)
+        float elapsedTime = 0f;
+
+        // 0 ~ 17프레임동안 위로 1만큼 이동
+        float firstPhaseDuration = 17f / 30f; // 17프레임 (30fps 기준 약 0.567초)
+        Vector3 firstPhaseTarget = startPosition + transform.up * 1f;
+        while (elapsedTime < firstPhaseDuration)
+        {
+            transform.position = Vector3.Lerp(startPosition, firstPhaseTarget, elapsedTime / firstPhaseDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 18 ~ 25프레임동안 앞으로 0.4만큼 이동
+        float secondPhaseDuration = 8f / 30f; // 8프레임 (30fps 기준 약 0.267초)
+        Vector3 secondPhaseTarget = firstPhaseTarget + transform.forward * 0.4f;
+        elapsedTime = 0f;
+        while (elapsedTime < secondPhaseDuration)
+        {
+            transform.position = Vector3.Lerp(firstPhaseTarget, secondPhaseTarget, elapsedTime / secondPhaseDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 최종 위치로 설정
+        transform.position = targetMantlePosition;
+
+        _isMantling = false;
+        // 맨틀 후 캐릭터 상태를 기본 상태(Idle)로 전환
+        if (_hasAnimator)
+        {
+            _animator.SetBool(_animIDMantle, false);
+        }
+        yield return null;
+    }
 }

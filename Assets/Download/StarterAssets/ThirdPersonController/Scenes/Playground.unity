@@ -1859,6 +1859,10 @@ PrefabInstance:
       propertyPath: normalCam
       value: 
       objectReference: {fileID: 1418538437}
+    - target: {fileID: 4793339204727043342, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+      propertyPath: characterController
+      value: 
+      objectReference: {fileID: 9200994135988767613}
     - target: {fileID: 6150452097419734053, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
       propertyPath: cam
       value: 
@@ -1907,12 +1911,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerArmature2
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 505745371332788481, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8292718411601089993, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
-      insertIndex: 4
+      insertIndex: 3
       addedObject: {fileID: 9200994135988767613}
   m_SourcePrefab: {fileID: 100100000, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
 --- !u!1001 &8345070700268369567
@@ -2156,7 +2161,7 @@ MonoBehaviour:
   sprintSpeed: 5.335
   swingSpeed: 10
   groundDrag: 2
-  JumpHeight: 1.2
+  JumpHeight: 1.5
   jumpCooldown: 0.1
   airMultiplier: 0.8
   Gravity: -15
@@ -2166,6 +2171,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 65
   grounded: 0
+  groundCheckBoxSize: 0.4
   JumpTimeout: 0.1
   FallTimeout: 0.15
   maxSlopeAngle: 60
@@ -2193,6 +2199,12 @@ MonoBehaviour:
   freeze: 0
   activeGrapple: 0
   swinging: 0
+  mantleLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
+  rayHeight: 0.9
+  maxReachDistance: 0.5
+  maxLedgeHeight: 0.9
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
