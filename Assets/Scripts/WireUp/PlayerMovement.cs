@@ -8,7 +8,7 @@ using StarterAssets;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    private float moveSpeed; // 현재 이동 속도
+    [SerializeField] private float moveSpeed; // 현재 이동 속도
     public float walkSpeed; // 걷기 속도
     public float sprintSpeed; // 달리기 속도
     public float swingSpeed; // 스윙 속도
@@ -43,7 +43,7 @@ public class PlayerMovement : MonoBehaviour
     public Transform playerCenter;
     public float playerHeight;
     public LayerMask GroundLayers; // 지면 레이어
-    bool grounded;
+    [SerializeField] bool grounded;
 
     public float JumpTimeout = 0.50f;
     public float FallTimeout = 0.15f;
@@ -78,8 +78,8 @@ public class PlayerMovement : MonoBehaviour
 
     //public Transform orientation;
 
-    float horizontalInput;
-    float verticalInput;
+    //float horizontalInput;
+    //float verticalInput;
 
     Vector3 moveDirection;
 
@@ -190,7 +190,9 @@ public class PlayerMovement : MonoBehaviour
         _animIDSpeed = Animator.StringToHash("Speed");
         _animIDGrounded = Animator.StringToHash("Grounded");
         _animIDJump = Animator.StringToHash("Jump");
+        _animIDFreeFall = Animator.StringToHash("FreeFall");
         _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+        //_animIDMantle = Animator.StringToHash("Mantle");
     }
 
     /*
@@ -268,19 +270,13 @@ public class PlayerMovement : MonoBehaviour
         else if (grounded)
         {
             state = MovementState.walking;
-            moveSpeed = walkSpeed;
+            //moveSpeed = walkSpeed;
         }
 
         // Mode - Air
         else
         {
             state = MovementState.air;
-        }
-
-        if (_animator)
-        {
-            _animator.SetFloat(_animIDSpeed, moveSpeed);
-            _animator.SetFloat(_animIDMotionSpeed, new Vector2(horizontalInput, verticalInput).magnitude);
         }
     }
 
@@ -289,6 +285,7 @@ public class PlayerMovement : MonoBehaviour
         if (activeGrapple) return;
         if (swinging) return;
 
+        moveSpeed = walkSpeed;
         // if there is no input, set the target speed to 0
         if (_input.move == Vector2.zero) moveSpeed = 0.0f;
 
