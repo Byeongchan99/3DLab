@@ -270,7 +270,7 @@ public class PlayerMovement : MonoBehaviour
         else if (grounded)
         {
             state = MovementState.walking;
-            //moveSpeed = walkSpeed;
+            moveSpeed = walkSpeed;
         }
 
         // Mode - Air
@@ -285,7 +285,6 @@ public class PlayerMovement : MonoBehaviour
         if (activeGrapple) return;
         if (swinging) return;
 
-        moveSpeed = walkSpeed;
         // if there is no input, set the target speed to 0
         if (_input.move == Vector2.zero) moveSpeed = 0.0f;
 
@@ -296,6 +295,7 @@ public class PlayerMovement : MonoBehaviour
 
         // normalise input direction
         Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+        moveDirection = inputDirection;
 
         // if there is a move input rotate player when the player is moving
         // 카메라에 따라 이동 방향 회전
@@ -330,8 +330,13 @@ public class PlayerMovement : MonoBehaviour
 
         // in air
         else if (!grounded)
-            _rigidbody.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
-
+        {
+            //rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+            // move the player
+            _rigidbody.velocity = targetDirection.normalized * (moveSpeed * inputMagnitude) + new Vector3(0.0f, _rigidbody.velocity.y, 0.0f) * airMultiplier;
+        }
+    
         // turn gravity off while on slope
         _rigidbody.useGravity = !OnSlope();
 
@@ -403,6 +408,12 @@ public class PlayerMovement : MonoBehaviour
                     _animator.SetBool(_animIDJump, true);
                 }
             }
+
+            // jump timeout
+            if (_jumpTimeoutDelta >= 0.0f)
+            {
+                _jumpTimeoutDelta -= Time.deltaTime;
+            }
         }
         else
         {
@@ -429,22 +440,26 @@ public class PlayerMovement : MonoBehaviour
         // 쿨다운 타이머 감소 및 ResetJump 호출
         if (!readyToJump)
         {
-            if (_jumpTimeoutDelta > 0.0f)
-            {
-                _jumpTimeoutDelta -= Time.deltaTime;
-            }
-            else
-            {
+            if (_jumpTimeoutDelta <= 0.0f)
                 ResetJump();
-            }
         }
 
-        //exitingSlope = true;
+        // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+        if (_verticalVelocity < _terminalVelocity)
+        {
+            _verticalVelocity += Gravity * Time.deltaTime;
+        }
 
-        // reset y velocity
-        //_rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0f, _rigidbody.velocity.z);
+        _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, _verticalVelocity, _rigidbody.velocity.z);
 
-        //_rigidbody.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        /*
+        exitingSlope = true;
+
+         reset y velocity
+        _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0f, _rigidbody.velocity.z);
+
+        _rigidbody.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        */
     }
 
     private void ResetJump()
