@@ -160,13 +160,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
         grounded = (Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers) 
             && Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.05f, GroundLayers));
-
-        if (_isMantling)
-        {
-            Debug.Log("맨틀 중");
-            return;
-        }
-
+     
         //PlayerInput();
         //MovePlayer();
         //Jump();
@@ -189,6 +183,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_isMantling)
+        {
+            Debug.Log("맨틀 중");
+            return;
+        }
+
         MovePlayer();
         Jump();
     }
@@ -265,7 +265,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Mode - Mantling
         else if (_input.mantle)
-        {
+        { 
             state = MovementState.mantling;
         }
 
@@ -762,6 +762,7 @@ public class PlayerMovement : MonoBehaviour
         transform.position = targetMantlePosition;
 
         _isMantling = false;
+        _input.MantleInput(false);
         // 맨틀 후 캐릭터 상태를 기본 상태(Idle)로 전환
         if (_hasAnimator)
         {

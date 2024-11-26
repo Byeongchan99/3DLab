@@ -52,6 +52,7 @@ namespace StarterAssets
                 if (characterController.CanPerformMantle())
                 {
 					Debug.Log("Mantle");
+					MantleInput(true);
                     characterController.StartMantle();
                 }
                 else
@@ -89,6 +90,11 @@ namespace StarterAssets
 		{
 			jump = newJumpState;
 		}
+
+		public void MantleInput(bool newMantleState)
+		{
+            mantle = newMantleState;
+        }
 
 		public void SprintInput(bool newSprintState)
 		{
