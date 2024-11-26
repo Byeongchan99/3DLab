@@ -15,8 +15,8 @@ public class PlayerMovement : MonoBehaviour
     public float swingSpeed; // ½ºÀ® ¼Óµµ
     private float _targetRotation = 0.0f;
     private float _rotationVelocity;
-    private float _verticalVelocity;
-    private float _terminalVelocity = 53.0f;
+    [SerializeField] private float _verticalVelocity;
+    private float _maxFallVelocity = -15.0f;
 
     public float groundDrag;
 
@@ -468,7 +468,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
-        if (_verticalVelocity < _terminalVelocity)
+        if (_verticalVelocity > _maxFallVelocity)
         {
             _verticalVelocity += Gravity * Time.deltaTime;
         }
