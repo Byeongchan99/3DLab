@@ -2158,6 +2158,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 0
   walkSpeed: 3
+  airSpeed: 3
   sprintSpeed: 5.335
   swingSpeed: 10
   groundDrag: 2

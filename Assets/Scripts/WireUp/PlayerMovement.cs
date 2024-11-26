@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed; // 현재 이동 속도
-    public float walkSpeed; // 걷기 속도
+    public float walkSpeed; // 걷기 속도   
     public float sprintSpeed; // 달리기 속도
     public float swingSpeed; // 스윙 속도
     private float _targetRotation = 0.0f;
@@ -296,6 +296,10 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             state = MovementState.air;
+            if (_input.sprint)
+                moveSpeed = sprintSpeed * airMultiplier;
+            else
+                moveSpeed = walkSpeed * airMultiplier;
         }
     }
 
