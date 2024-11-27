@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using TMPro;
 using StarterAssets;
 using UnityEngine.InputSystem.XR;
+using static UnityEngine.UI.Image;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -55,6 +56,8 @@ public class PlayerMovement : MonoBehaviour
     private RaycastHit slopeHit;
     [SerializeField] private bool exitingSlope;
     public bool isSlope;
+    public bool upDirection;
+    public bool downDirection;
 
     [Header("Audio")]
     public AudioClip LandingAudioClip;
@@ -155,13 +158,19 @@ public class PlayerMovement : MonoBehaviour
         _fallTimeoutDelta = FallTimeout;
     }
 
+    public void IsGrounded()
+    {
+        Vector3 boxSize = new Vector3(0.1f, 0.1f, 0.1f);
+        grounded = Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers);
+    }
+
     private void Update()
     {
-        // ground check
-        Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
-        grounded = (Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers));
+        // ground check 
+        //grounded = Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers);
         //Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.05f, GroundLayers));
-     
+        //grounded = Physics.CheckCapsule(transform.position, transform.position, groundCheckBoxSize, GroundLayers);
+           
         //PlayerInput();
         //MovePlayer();
         //Jump();
@@ -184,6 +193,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        IsGrounded();
+        CheckSlope();
+
         if (_isMantling)
         {
             Debug.Log("맨틀 중");
@@ -304,14 +316,52 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void CheckSlope()
+    {
+        // turn gravity off while on slope
+        if (OnSlope())
+        {
+            Vector3 slopeMoveDirection = GetSlopeMoveDirection();
+
+            if (slopeMoveDirection.y > 0)
+            {
+                upDirection = true;
+                downDirection = false;
+            }
+            else
+            {
+                downDirection = true;
+                upDirection = false;
+            }
+
+            //Gravity = -30f;
+            isSlope = true;
+            _rigidbody.useGravity = false;
+        }
+        else
+        {
+            //Gravity = -15.0f;
+            isSlope = false;
+            _rigidbody.useGravity = true;
+        }
+    }
+
     private void MovePlayer()
     {
         if (activeGrapple) return;
         if (swinging) return;
 
         // if there is no input, set the target speed to 0
-        if (_input.move == Vector2.zero) moveSpeed = 0.0f;
+        if (_input.move == Vector2.zero) { 
+            moveSpeed = 0.0f;
+            // 입력이 없고 경사로를 내려가고 있을 때 수직 속도를 0으로 설정하여 미끄러짐 방지
+            if (isSlope && downDirection)
+            {
+                _verticalVelocity = 0f;
+            }
+        }
 
+        // 입력 강도 조절 - 조이스틱 입력이 아닐 경우 1로 설정
         float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
 
         // calculate movement direction
@@ -363,20 +413,6 @@ public class PlayerMovement : MonoBehaviour
             // move the player
             _rigidbody.velocity = targetDirection.normalized * (moveSpeed * inputMagnitude) + new Vector3(0.0f, _rigidbody.velocity.y, 0.0f) * airMultiplier;
         }
-    
-        // turn gravity off while on slope
-        if (OnSlope())
-        {
-            //Gravity = 0;
-            isSlope = true;
-            _rigidbody.useGravity = false;
-        }
-        else
-        {
-            //Gravity = -15.0f;
-            isSlope = false;
-            _rigidbody.useGravity = true;
-        }
 
         // update animator if using character
         if (_hasAnimator)
@@ -427,10 +463,27 @@ public class PlayerMovement : MonoBehaviour
             // 수직 속도 안정화
             if (_verticalVelocity < 0.0f)
             {
+                /*
                 if (isSlope)
                     _verticalVelocity = 0f;
                 else 
                     _verticalVelocity = -2f;
+                */
+                if (isSlope)
+                {
+                    if (upDirection)
+                    {
+                        _verticalVelocity = 0f;
+                    }
+                    else if (downDirection)
+                    {
+                        _verticalVelocity = -3f;
+                    }
+                }
+                else
+                {
+                    _verticalVelocity = 0f;
+                }
             }
 
             // 점프 처리
@@ -484,6 +537,7 @@ public class PlayerMovement : MonoBehaviour
                 ResetJump();
         }
 
+        // 나중에 로프 관련 변수 추가
         // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
         if (_verticalVelocity > _maxFallVelocity && !grounded)
         {
@@ -570,7 +624,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool OnSlope()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, 0.2f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < maxSlopeAngle && angle != 0;
@@ -597,14 +651,13 @@ public class PlayerMovement : MonoBehaviour
         return velocityXZ + velocityY;
     }
 
-    private void OnDrawGizmos()
-    {
+    void OnDrawGizmos()
+    {       
         Gizmos.color = Color.red;
-        Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
-        Gizmos.DrawWireCube(transform.position, boxSize);
-        //Gizmos.DrawRay(playerCenter.position, Vector3.down * (playerHeight * 0.5f + 0.05f));
-        Gizmos.DrawRay(transform.position, Vector3.down * (playerHeight * 0.5f + 0.3f));
+        //Gizmos.DrawWireSphere(transform.position, 0.1f);
+        Gizmos.DrawCube(transform.position, new Vector3(0.2f, 0.1f, 0.2f));
     }
+
 
     private void OnFootstep(AnimationEvent animationEvent)
     {
@@ -670,6 +723,8 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("이미 맨틀하는 중");
             return false; // 이미 맨틀 중이면 맨틀 불가
         }
+
+        //Debug.Log("맨틀 가능 여부 체크")
 
         // 1. 전방 트레이스: 캐릭터의 중심에서 약간 뒤쪽으로 시작해서 장애물 감지
         Vector3 rayStartCenter = transform.position + transform.forward * -0.1f + Vector3.up * rayHeight;
