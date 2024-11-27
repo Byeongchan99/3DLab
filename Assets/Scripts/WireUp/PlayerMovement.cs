@@ -45,7 +45,7 @@ public class PlayerMovement : MonoBehaviour
     public float playerHeight;
     public LayerMask GroundLayers; // 지면 레이어
     [SerializeField] bool grounded;
-    public float groundCheckBoxSize = 0.4f;
+    public float groundCheckBoxSize = 0.1f;
 
     public float JumpTimeout = 0.50f;
     public float FallTimeout = 0.15f;
@@ -53,7 +53,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Slope Handling")]
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
-    private bool exitingSlope;
+    [SerializeField] private bool exitingSlope;
+    public bool isSlope;
 
     [Header("Audio")]
     public AudioClip LandingAudioClip;
@@ -158,8 +159,8 @@ public class PlayerMovement : MonoBehaviour
     {
         // ground check
         Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
-        grounded = (Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers) 
-            && Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.05f, GroundLayers));
+        grounded = (Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers));
+        //Physics.Raycast(playerCenter.position, Vector3.down, playerHeight * 0.5f + 0.05f, GroundLayers));
      
         //PlayerInput();
         //MovePlayer();
@@ -318,14 +319,13 @@ public class PlayerMovement : MonoBehaviour
 
         // normalise input direction
         Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
-        moveDirection = inputDirection;
+        moveDirection = Quaternion.Euler(0, _mainCamera.transform.eulerAngles.y, 0) * inputDirection;
 
         // if there is a move input rotate player when the player is moving
         // 카메라에 따라 이동 방향 회전
         if (_input.move != Vector2.zero)
         {
-            _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
-                              _mainCamera.transform.eulerAngles.y;
+            _targetRotation = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
             float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
                 RotationSmoothTime);
 
@@ -336,10 +336,14 @@ public class PlayerMovement : MonoBehaviour
         // on slope
         if (OnSlope() && !exitingSlope)
         {
+            /*
             _rigidbody.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
 
             if (_rigidbody.velocity.y > 0)
                 _rigidbody.AddForce(Vector3.down * 80f, ForceMode.Force);
+            */
+
+            _rigidbody.velocity = GetSlopeMoveDirection() * moveSpeed * inputMagnitude;
         }
 
         // on ground
@@ -361,7 +365,18 @@ public class PlayerMovement : MonoBehaviour
         }
     
         // turn gravity off while on slope
-        _rigidbody.useGravity = !OnSlope();
+        if (OnSlope())
+        {
+            //Gravity = 0;
+            isSlope = true;
+            _rigidbody.useGravity = false;
+        }
+        else
+        {
+            //Gravity = -15.0f;
+            isSlope = false;
+            _rigidbody.useGravity = true;
+        }
 
         // update animator if using character
         if (_hasAnimator)
@@ -381,7 +396,6 @@ public class PlayerMovement : MonoBehaviour
             if (_rigidbody.velocity.magnitude > moveSpeed)
                 _rigidbody.velocity = _rigidbody.velocity.normalized * moveSpeed;
         }
-
         // limiting speed on ground or in air
         else
         {
@@ -413,7 +427,10 @@ public class PlayerMovement : MonoBehaviour
             // 수직 속도 안정화
             if (_verticalVelocity < 0.0f)
             {
-                _verticalVelocity = -2f;
+                if (isSlope)
+                    _verticalVelocity = 0f;
+                else 
+                    _verticalVelocity = -2f;
             }
 
             // 점프 처리
@@ -468,7 +485,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
-        if (_verticalVelocity > _maxFallVelocity)
+        if (_verticalVelocity > _maxFallVelocity && !grounded)
         {
             _verticalVelocity += Gravity * Time.deltaTime;
         }
@@ -585,7 +602,8 @@ public class PlayerMovement : MonoBehaviour
         Gizmos.color = Color.red;
         Vector3 boxSize = new Vector3(groundCheckBoxSize, 0.1f, groundCheckBoxSize);
         Gizmos.DrawWireCube(transform.position, boxSize);
-        Gizmos.DrawRay(playerCenter.position, Vector3.down * (playerHeight * 0.5f + 0.05f));
+        //Gizmos.DrawRay(playerCenter.position, Vector3.down * (playerHeight * 0.5f + 0.05f));
+        Gizmos.DrawRay(transform.position, Vector3.down * (playerHeight * 0.5f + 0.3f));
     }
 
     private void OnFootstep(AnimationEvent animationEvent)
