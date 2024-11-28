@@ -323,7 +323,7 @@ public class PlayerMovement : MonoBehaviour
         {
             Vector3 slopeMoveDirection = GetSlopeMoveDirection();
 
-            if (slopeMoveDirection.y > 0)
+            if (slopeMoveDirection.y >= 0)
             {
                 upDirection = true;
                 downDirection = false;
@@ -394,6 +394,11 @@ public class PlayerMovement : MonoBehaviour
             */
 
             _rigidbody.velocity = GetSlopeMoveDirection() * moveSpeed * inputMagnitude;
+
+            if (downDirection)
+            {
+                _verticalVelocity = -3f;
+            }           
         }
 
         // on ground
@@ -461,14 +466,14 @@ public class PlayerMovement : MonoBehaviour
             }
 
             // 수직 속도 안정화
-            if (_verticalVelocity < 0.0f)
+            if (_verticalVelocity < 0.0f && !downDirection)
             {
                 /*
                 if (isSlope)
                     _verticalVelocity = 0f;
                 else 
                     _verticalVelocity = -2f;
-                */
+                
                 if (isSlope)
                 {
                     if (upDirection)
@@ -484,6 +489,8 @@ public class PlayerMovement : MonoBehaviour
                 {
                     _verticalVelocity = 0f;
                 }
+                */
+                _verticalVelocity = 0f;
             }
 
             // 점프 처리
