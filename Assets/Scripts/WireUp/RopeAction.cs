@@ -10,7 +10,7 @@ public class RopeAction : MonoBehaviour
     public Transform gunTip;
     public LayerMask whatIsGrappleable;
     public LineRenderer lr;
-    public ThirdPersonControllerWithRigidbody characterController;
+    public PlayerMovement characterController;
 
     [Header("Grappling")]
     public float maxGrappleDistance;
@@ -27,7 +27,6 @@ public class RopeAction : MonoBehaviour
     public KeyCode grappleKey = KeyCode.Mouse1;
 
     public bool aimMode = false; // 조준 모드
-    private bool isGrappling;
     private SpringJoint joint;
     public Rigidbody rb;
 
@@ -40,7 +39,7 @@ public class RopeAction : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0) && aimMode == true && isGrappling == false)
+        if (Input.GetMouseButtonDown(0) && aimMode == true && characterController.swinging == false)
         {
             Debug.Log("StartGrapple");
             StartGrapple();
@@ -50,7 +49,7 @@ public class RopeAction : MonoBehaviour
             grapplingCdTimer -= Time.deltaTime;
 
         // 중간에 그래플링 멈추기
-        if (Input.GetMouseButtonUp(0) && isGrappling)
+        if (Input.GetMouseButtonUp(0) && characterController.swinging)
         {
             StopGrapple();
         }
@@ -59,7 +58,7 @@ public class RopeAction : MonoBehaviour
     private void FixedUpdate()
     {
         // FixedUpdate에서 그래플링 힘을 적용
-        if (isGrappling)
+        if (characterController.swinging)
         {
             //ApplyGrapplingForce();
         }
@@ -89,11 +88,16 @@ public class RopeAction : MonoBehaviour
 
             float distanceFromPoint = Vector3.Distance(rb.position, grapplePoint);
 
+            /*
             joint.maxDistance = distanceFromPoint * 0.8f;
             joint.minDistance = distanceFromPoint * 0.25f;
+            */
 
-            joint.spring = 1000f;
-            joint.damper = 150f;
+            joint.maxDistance = distanceFromPoint;
+            joint.minDistance = distanceFromPoint;
+
+            joint.spring = 5f;
+            joint.damper = 50f;
             joint.massScale = 1f;
 
             lr.positionCount = 2;
@@ -101,7 +105,7 @@ public class RopeAction : MonoBehaviour
             lr.SetPosition(1, grapplePoint);
             lr.enabled = true;
 
-            isGrappling = true;
+            characterController.swinging = true;
 
             // ExecuteGrapple을 FixedUpdate에서 지속적으로 처리하도록 설정
             Invoke(nameof(ExecuteGrapple), grappleDelayTime);
@@ -115,7 +119,7 @@ public class RopeAction : MonoBehaviour
         if (joint == null) return;
 
         // 그래플링 시작 지점에서 약간의 지연을 둔 후 힘을 지속적으로 적용
-        isGrappling = true;
+        characterController.swinging = true;
     }
 
     /*
@@ -134,7 +138,7 @@ public class RopeAction : MonoBehaviour
 
     public void StopGrapple()
     {
-        isGrappling = false;
+        characterController.swinging = false;
 
         // SpringJoint 제거
         if (joint != null)
@@ -150,7 +154,7 @@ public class RopeAction : MonoBehaviour
 
     private void DrawRope()
     {
-        if (isGrappling)
+        if (characterController.swinging)
         {
             lr.SetPosition(0, gunTip.position);
             lr.SetPosition(1, grapplePoint);
@@ -159,7 +163,7 @@ public class RopeAction : MonoBehaviour
 
     public bool IsGrappling()
     {
-        return isGrappling;
+        return characterController.swinging;
     }
 
     public Vector3 GetGrapplePoint()

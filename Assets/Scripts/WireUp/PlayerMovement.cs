@@ -49,6 +49,8 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Gravity applied to the player")]
     public float Gravity = -15.0f; // 중력 값
 
+    private bool _currentJumpInput;
+
     /*
     [Header("Crouching")]
     public float crouchSpeed;
@@ -150,6 +152,7 @@ public class PlayerMovement : MonoBehaviour
     //float verticalInput;
 
     [Header("Movement Direction")]
+    private Vector2 _currentMoveInput;
     [Tooltip("Direction of player movement")]
     private Vector3 moveDirection; // 플레이어 이동 방향
 
@@ -241,6 +244,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        PlayerInput(); // 플레이어 입력 처리
         // 속도 제어 및 상태 처리
         SpeedControl();
         StateHandler();
@@ -268,7 +272,14 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        MovePlayer(); // 플레이어 이동 처리
+        if (!swinging)
+        {
+            MovePlayer(); // 플레이어 이동 처리
+        }
+        else
+        {
+            SwingMovePlayer();
+        }
         Jump(); // 점프 처리
     }
 
@@ -290,12 +301,12 @@ public class PlayerMovement : MonoBehaviour
         _animIDMantle = Animator.StringToHash("Mantle");
     }
 
-    /*
     private void PlayerInput()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
-        
+        _currentMoveInput = _input.move;
+        _currentJumpInput = _input.jump;
+
+        /*
         // when to jump
         if (_input.jump && readyToJump && grounded)
         {
@@ -318,8 +329,8 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         }
+        */
     }
-    */
 
     /// <summary>
     /// 플레이어의 상태를 관리
@@ -427,7 +438,7 @@ public class PlayerMovement : MonoBehaviour
         if (activeGrapple || swinging) return;
 
         // 입력이 없을 때 속도 0으로 설정
-        if (_input.move == Vector2.zero)
+        if (_currentMoveInput == Vector2.zero)
         {
             moveSpeed = 0.0f;
             // 경사면을 내려가는 중일 때 수직 속도를 0으로 설정하여 미끄러짐 방지
@@ -438,14 +449,14 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // 입력 강도 조절 - 아날로그 입력이 아닐 경우 1로 설정
-        float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+        float inputMagnitude = _input.analogMovement ? _currentMoveInput.magnitude : 1f;
 
         // 이동 방향 계산
-        Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+        Vector3 inputDirection = new Vector3(_currentMoveInput.x, 0.0f, _currentMoveInput.y).normalized;
         moveDirection = Quaternion.Euler(0, _mainCamera.transform.eulerAngles.y, 0) * inputDirection;
 
         // 입력이 있을 때 플레이어 회전
-        if (_input.move != Vector2.zero)
+        if (_currentMoveInput != Vector2.zero)
         {
             _targetRotation = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
             float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
@@ -487,11 +498,19 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
+    /// Swing the player
+    /// </summary>
+    private void SwingMovePlayer()
+    {
+        Debug.Log("스윙 중");
+    }
+
+    /// <summary>
     /// 속도 제한 처리
     /// </summary>
     private void SpeedControl()
     {
-        if (activeGrapple) return;
+        if (activeGrapple || swinging) return;
 
         // 경사면 위에서의 속도 제한
         if (OnSlope() && !exitingSlope)
@@ -518,6 +537,8 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void Jump()
     {
+        if (swinging) return;
+
         if (grounded)
         {
             // 낙하 타임아웃 리셋
@@ -537,7 +558,7 @@ public class PlayerMovement : MonoBehaviour
             }
 
             // 점프 입력 처리
-            if (_input.jump && readyToJump && grounded)
+            if (_currentJumpInput && readyToJump && grounded)
             {
                 exitingSlope = true;
                 _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
@@ -602,6 +623,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void ResetJump()
     {
+        _currentJumpInput = false;
         readyToJump = true;
         exitingSlope = false;
     }
