@@ -502,7 +502,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void SwingMovePlayer()
     {
-        Debug.Log("½ºÀ® Áß");
+        //Debug.Log("½ºÀ® Áß");
     }
 
     /// <summary>

@@ -11,6 +11,8 @@ public class RopeAction : MonoBehaviour
     public LayerMask whatIsGrappleable;
     public LineRenderer lr;
     public PlayerMovement characterController;
+    public Transform playerTransform;
+    public Rigidbody playerRb;
 
     [Header("Grappling")]
     public float maxGrappleDistance;
@@ -18,6 +20,11 @@ public class RopeAction : MonoBehaviour
     public float overshootYAxis;
 
     private Vector3 grapplePoint;
+
+    [Header("Swinging")]
+    public float horizontalThrustForce;
+    public float forwardThrustForce;
+    public float extendCableSpeed;
 
     [Header("Cooldown")]
     public float grapplingCd;
@@ -52,6 +59,11 @@ public class RopeAction : MonoBehaviour
         if (Input.GetMouseButtonUp(0) && characterController.swinging)
         {
             StopGrapple();
+        }
+
+        if (joint != null)
+        {
+            airMovement();
         }
     }
 
@@ -169,5 +181,29 @@ public class RopeAction : MonoBehaviour
     public Vector3 GetGrapplePoint()
     {
         return grapplePoint;
+    }
+
+    public void airMovement()
+    {
+        // ¿À¸¥ÂÊ
+        if (Input.GetKey(KeyCode.D))
+        {
+            rb.AddForce(playerTransform.right * horizontalThrustForce * Time.deltaTime);
+        }
+
+        if (Input.GetKey(KeyCode.A))
+        {
+            rb.AddForce(-playerTransform.right * horizontalThrustForce * Time.deltaTime);
+        }
+
+        if (Input.GetKey(KeyCode.W))
+        {
+            rb.AddForce(playerTransform.forward * forwardThrustForce * Time.deltaTime);
+        }
+
+        if (Input.GetKey(KeyCode.S))
+        {
+            rb.AddForce(-playerTransform.forward * forwardThrustForce * Time.deltaTime);
+        }
     }
 }

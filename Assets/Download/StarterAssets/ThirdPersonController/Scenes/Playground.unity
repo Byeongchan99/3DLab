@@ -1868,9 +1868,25 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1628222881}
     - target: {fileID: 6150452097419734053, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+      propertyPath: playerRb
+      value: 
+      objectReference: {fileID: 9200994135988767614}
+    - target: {fileID: 6150452097419734053, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 9200994135988767615}
+    - target: {fileID: 6150452097419734053, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+      propertyPath: forwardThrustForce
+      value: 0.0001
+      objectReference: {fileID: 0}
+    - target: {fileID: 6150452097419734053, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
       propertyPath: characterController
       value: 
       objectReference: {fileID: 9200994135988767613}
+    - target: {fileID: 6150452097419734053, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+      propertyPath: horizontalThrustForce
+      value: 0.0001
+      objectReference: {fileID: 0}
     - target: {fileID: 6384401870154746440, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
       propertyPath: m_Mass
       value: 0.0000001
@@ -2167,7 +2183,7 @@ MonoBehaviour:
   moveSpeed: 0
   walkSpeed: 3
   sprintSpeed: 5.335
-  swingSpeed: 0
+  swingSpeed: 10
   _verticalVelocity: 0
   groundDrag: 2
   JumpHeight: 1.5
@@ -2218,6 +2234,16 @@ MonoBehaviour:
   rayHeight: 0.9
   maxReachDistance: 0.5
   maxLedgeHeight: 0.9
+--- !u!54 &9200994135988767614 stripped
+Rigidbody:
+  m_CorrespondingSourceObject: {fileID: 6384401870154746440, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+  m_PrefabInstance: {fileID: 8230600477297183946}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &9200994135988767615 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6656984020226973480, guid: 10a40696cd361db47bd1b36acdd28e2f, type: 3}
+  m_PrefabInstance: {fileID: 8230600477297183946}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
