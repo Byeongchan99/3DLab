@@ -13,6 +13,7 @@ public class RopeAction : MonoBehaviour
     public PlayerMovement characterController;
     public Transform playerTransform;
     public Rigidbody playerRb;
+    public StarterAssetsInputs _input;
 
     [Header("Grappling")]
     public float maxGrappleDistance;
@@ -22,9 +23,10 @@ public class RopeAction : MonoBehaviour
     private Vector3 grapplePoint;
 
     [Header("Swinging")]
-    public float horizontalThrustForce;
-    public float forwardThrustForce;
-    public float extendCableSpeed;
+    //public float horizontalThrustForce;
+    //public float forwardThrustForce;
+    //public float extendCableSpeed;
+    public float forceMultiplier;
 
     [Header("Cooldown")]
     public float grapplingCd;
@@ -61,7 +63,7 @@ public class RopeAction : MonoBehaviour
             StopGrapple();
         }
 
-        if (joint != null)
+        if (joint != null && !characterController.grounded)
         {
             airMovement();
         }
@@ -99,14 +101,14 @@ public class RopeAction : MonoBehaviour
             joint.connectedAnchor = grapplePoint;
 
             float distanceFromPoint = Vector3.Distance(rb.position, grapplePoint);
-
-            /*
+          
             joint.maxDistance = distanceFromPoint * 0.8f;
             joint.minDistance = distanceFromPoint * 0.25f;
-            */
-
+            
+            /*
             joint.maxDistance = distanceFromPoint;
             joint.minDistance = distanceFromPoint;
+            */
 
             joint.spring = 5f;
             joint.damper = 50f;
@@ -185,25 +187,28 @@ public class RopeAction : MonoBehaviour
 
     public void airMovement()
     {
-        // 오른쪽
-        if (Input.GetKey(KeyCode.D))
-        {
-            rb.AddForce(playerTransform.right * horizontalThrustForce * Time.deltaTime);
-        }
+        // 입력된 이동 값을 가져옵니다.
+        Vector2 moveInput = _input.move;
 
-        if (Input.GetKey(KeyCode.A))
-        {
-            rb.AddForce(-playerTransform.right * horizontalThrustForce * Time.deltaTime);
-        }
+        // 입력이 없으면 움직임을 적용하지 않습니다.
+        if (moveInput == Vector2.zero)
+            return;
 
-        if (Input.GetKey(KeyCode.W))
-        {
-            rb.AddForce(playerTransform.forward * forwardThrustForce * Time.deltaTime);
-        }
+        // 카메라의 회전을 기반으로 이동 방향을 계산합니다.
+        Vector3 camForward = cam.transform.forward;
+        Vector3 camRight = cam.transform.right;
 
-        if (Input.GetKey(KeyCode.S))
-        {
-            rb.AddForce(-playerTransform.forward * forwardThrustForce * Time.deltaTime);
-        }
+        // 수평면에 투영하여 y값을 0으로 만듭니다.
+        camForward.y = 0f;
+        camRight.y = 0f;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        // 이동 방향 계산
+        Vector3 moveDirection = camForward * moveInput.y + camRight * moveInput.x;
+        moveDirection.Normalize();
+       
+        // 힘 가하기
+        rb.AddForce(moveDirection * forceMultiplier * Time.deltaTime, ForceMode.Force);
     }
 }

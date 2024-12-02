@@ -75,7 +75,7 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField]
     [Tooltip("Is the player grounded")]
-    private bool grounded; // 플레이어가 지면에 있는지 여부
+    public bool grounded; // 플레이어가 지면에 있는지 여부
 
     [Tooltip("Size of the box used for ground checking")]
     public float groundCheckBoxSize = 0.1f; // 지면 체크에 사용되는 박스 크기
@@ -272,14 +272,7 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        if (!swinging)
-        {
-            MovePlayer(); // 플레이어 이동 처리
-        }
-        else
-        {
-            SwingMovePlayer();
-        }
+        MovePlayer(); // 플레이어 이동 처리
         Jump(); // 점프 처리
     }
 
@@ -353,7 +346,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Mode - Swinging
-        else if (swinging)
+        else if (swinging && !grounded)
         {
             state = MovementState.swinging;
             moveSpeed = swingSpeed;
@@ -435,7 +428,9 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void MovePlayer()
     {
-        if (activeGrapple || swinging) return;
+        if (activeGrapple) return;
+
+        if (swinging && !grounded) return;
 
         // 입력이 없을 때 속도 0으로 설정
         if (_currentMoveInput == Vector2.zero)
@@ -537,7 +532,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void Jump()
     {
-        if (swinging) return;
+        if (swinging && !grounded) return;
 
         if (grounded)
         {
