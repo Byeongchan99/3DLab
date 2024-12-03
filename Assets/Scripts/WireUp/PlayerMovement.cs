@@ -21,6 +21,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Tooltip("Swing speed")]
     public float swingSpeed; // 스윙 속도
+    private bool isSwingEnded = false;
 
     private float _targetRotation = 0.0f;
     private float _rotationVelocity;
@@ -240,6 +241,12 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 boxSize = new Vector3(0.1f, 0.1f, 0.1f);
         grounded = Physics.CheckBox(transform.position, boxSize, Quaternion.identity, GroundLayers);
+
+        // 바닥에 닿았을 때 스윙 종료 상태 초기화
+        if (grounded && isSwingEnded)
+        {
+            isSwingEnded = false;
+        }
     }
 
     private void Update()
@@ -432,6 +439,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (swinging && !grounded) return;
 
+        if (isSwingEnded) return;
+
         // 입력이 없을 때 속도 0으로 설정
         if (_currentMoveInput == Vector2.zero)
         {
@@ -507,6 +516,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (activeGrapple || swinging) return;
 
+        if (!grounded) return;
+
         // 경사면 위에서의 속도 제한
         if (OnSlope() && !exitingSlope)
         {
@@ -533,6 +544,9 @@ public class PlayerMovement : MonoBehaviour
     private void Jump()
     {
         if (swinging && !grounded) return;
+
+        // 스윙 종료 후 바닥에 닿기 전까지 점프 비활성화
+        if (isSwingEnded) return;
 
         if (grounded)
         {
@@ -964,5 +978,10 @@ public class PlayerMovement : MonoBehaviour
             _animator.SetBool(_animIDMantle, false);
         }
         yield return null;
+    }
+
+    public void OnSwingEnd()
+    {
+        isSwingEnded = true;
     }
 }

@@ -154,6 +154,9 @@ public class RopeAction : MonoBehaviour
     {
         characterController.swinging = false;
 
+        // 스윙 종료 처리
+        characterController.OnSwingEnd();
+
         // SpringJoint 제거
         if (joint != null)
         {
