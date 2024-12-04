@@ -27,6 +27,7 @@ public class RopeAction : MonoBehaviour
     //public float forwardThrustForce;
     //public float extendCableSpeed;
     public float forceMultiplier;
+    public bool connectedRope;
 
     [Header("Cooldown")]
     public float grapplingCd;
@@ -120,6 +121,7 @@ public class RopeAction : MonoBehaviour
             lr.enabled = true;
 
             characterController.swinging = true;
+            connectedRope = true;
 
             // ExecuteGrapple을 FixedUpdate에서 지속적으로 처리하도록 설정
             Invoke(nameof(ExecuteGrapple), grappleDelayTime);
@@ -153,6 +155,7 @@ public class RopeAction : MonoBehaviour
     public void StopGrapple()
     {
         characterController.swinging = false;
+        connectedRope = false;
 
         // 스윙 종료 처리
         characterController.OnSwingEnd();
@@ -171,10 +174,12 @@ public class RopeAction : MonoBehaviour
 
     private void DrawRope()
     {
-        if (characterController.swinging)
+        if (connectedRope)
         {
             lr.SetPosition(0, gunTip.position);
             lr.SetPosition(1, grapplePoint);
+            transform.LookAt(grapplePoint);
+            Debug.Log("gunTip 회전: " + gunTip.rotation.eulerAngles);
         }
     }
 

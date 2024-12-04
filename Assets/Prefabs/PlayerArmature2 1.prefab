@@ -768,8 +768,8 @@ Transform:
   m_GameObject: {fileID: 4049557309359704813}
   serializedVersion: 2
   m_LocalRotation: {x: -0.99258024, y: 0.04327539, z: 0.113521874, w: 0.004949396}
-  m_LocalPosition: {x: 0.103468634, y: -0.13568963, z: -0.05369737}
-  m_LocalScale: {x: 0.05000001, y: 0.04999999, z: 0.19999997}
+  m_LocalPosition: {x: 0.10346864, y: -0.13568951, z: -0.05369737}
+  m_LocalScale: {x: 0.050000016, y: 0.049999986, z: 0.19999997}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7404997576261383307}
@@ -843,10 +843,15 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   lr: {fileID: 8587805013724382424}
-  characterController: {fileID: 505745371332788481}
+  characterController: {fileID: 0}
+  playerTransform: {fileID: 0}
+  playerRb: {fileID: 0}
+  _input: {fileID: 0}
   maxGrappleDistance: 10
   grappleDelayTime: 0
   overshootYAxis: 2
+  forceMultiplier: 0
+  connectedRope: 0
   grapplingCd: 1
   grappleKey: 324
   aimMode: 0
@@ -2630,7 +2635,7 @@ MonoBehaviour:
   analogMovement: 0
   cursorLocked: 1
   cursorInputForLook: 1
-  characterController: {fileID: 505745371332788481}
+  characterController: {fileID: 0}
 --- !u!114 &7545070481167655806
 MonoBehaviour:
   m_ObjectHideFlags: 0
