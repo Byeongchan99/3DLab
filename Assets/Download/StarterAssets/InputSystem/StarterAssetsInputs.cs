@@ -51,13 +51,13 @@ namespace StarterAssets
                 // 점프가 입력되었을 때 컨트롤러에서 Mantle 가능 여부를 체크
                 if (characterController.CanPerformMantle())
                 {
-					Debug.Log("Mantle");
+					//Debug.Log("Mantle");
 					MantleInput(true);
                     characterController.StartMantle();
                 }
                 else
                 {
-					Debug.Log("Jump");
+					//Debug.Log("Jump");
                     JumpInput(true);
                 }
             }

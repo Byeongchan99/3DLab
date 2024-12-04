@@ -439,8 +439,6 @@ public class PlayerMovement : MonoBehaviour
 
         if (swinging && !grounded) return;
 
-        if (isSwingEnded) return;
-
         // 입력이 없을 때 속도 0으로 설정
         if (_currentMoveInput == Vector2.zero)
         {
@@ -469,6 +467,8 @@ public class PlayerMovement : MonoBehaviour
             // 카메라 방향에 따라 플레이어 회전
             transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         }
+
+        if (isSwingEnded) return;
 
         // 경사면 위에서의 이동
         if (OnSlope() && !exitingSlope)
@@ -514,9 +514,9 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void SpeedControl()
     {
-        if (activeGrapple || swinging) return;
+        if (activeGrapple) return;
 
-        if (!grounded) return;
+        //if (!grounded) return;
 
         // 경사면 위에서의 속도 제한
         if (OnSlope() && !exitingSlope)
