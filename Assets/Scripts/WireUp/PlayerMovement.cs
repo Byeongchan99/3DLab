@@ -439,38 +439,59 @@ public class PlayerMovement : MonoBehaviour
 
         if (swinging && !grounded) return;
 
-        // 입력이 없을 때 속도 0으로 설정
+        // 이동 입력이 없을 때
         if (_currentMoveInput == Vector2.zero)
         {
             moveSpeed = 0.0f;
-            // 경사면을 내려가는 중일 때 수직 속도를 0으로 설정하여 미끄러짐 방지
+            // 경사면 미끄러짐 방지
             if (isSlope && downDirection)
             {
                 _verticalVelocity = 0f;
             }
         }
 
-        // 입력 강도 조절 - 아날로그 입력이 아닐 경우 1로 설정
         float inputMagnitude = _input.analogMovement ? _currentMoveInput.magnitude : 1f;
-
-        // 이동 방향 계산
         Vector3 inputDirection = new Vector3(_currentMoveInput.x, 0.0f, _currentMoveInput.y).normalized;
         moveDirection = Quaternion.Euler(0, _mainCamera.transform.eulerAngles.y, 0) * inputDirection;
 
-        // 입력이 있을 때 플레이어 회전
+        // 플레이어 회전
         if (_currentMoveInput != Vector2.zero)
         {
             _targetRotation = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
-            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                RotationSmoothTime);
-
-            // 카메라 방향에 따라 플레이어 회전
+            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
             transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         }
 
-        if (isSwingEnded) return;
+        // --- 수정 부분 시작 ---
+        // 스윙 종료 후 공중 이동을 약간 허용하는 로직
+        if (isSwingEnded)
+        {
+            // 스윙 관성 유지: 현재 Rigidbody velocity를 그대로 두되,
+            // 입력에 따른 추가 이동속도 반영은 축소한다.
 
-        // 경사면 위에서의 이동
+            // 예를 들어 공중에서 이동 영향도를 30%만 적용
+            float reducedAirControl = 0.8f;
+            if (!grounded)
+            {
+                Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+                Vector3 currentVelocity = _rigidbody.velocity;
+                Vector3 desiredVelocity = targetDirection.normalized * (moveSpeed * inputMagnitude * reducedAirControl)
+                                          + new Vector3(0.0f, currentVelocity.y, 0.0f);
+
+                // 기존 속도와 약간의 방향 전환만 허용
+                // 여기서는 원하는 만큼 정교하게 blending 할 수 있다.
+                _rigidbody.velocity = Vector3.Lerp(currentVelocity, desiredVelocity, 0.1f);
+                return; // 기존 return 대신 약간의 조정만 하고 함수 종료
+            }
+            else
+            {
+                // 바닥에 닿았으면 isSwingEnded 초기화는 다른 곳에서 이뤄질테니 이 부분은 크게 문제되지 않음
+                // 지상에서는 정상 로직 수행(아래 로직 진행)
+            }
+        }
+        // --- 수정 부분 끝 ---
+
+        // 경사면 위에서 이동
         if (OnSlope() && !exitingSlope)
         {
             _rigidbody.velocity = GetSlopeMoveDirection() * moveSpeed * inputMagnitude;
@@ -480,26 +501,26 @@ public class PlayerMovement : MonoBehaviour
                 _verticalVelocity = -3f;
             }
         }
-        // 지면 위에서의 이동
+        // 지면 위에서 이동
         else if (grounded)
         {
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
             _rigidbody.velocity = targetDirection.normalized * (moveSpeed * inputMagnitude) + new Vector3(0.0f, _rigidbody.velocity.y, 0.0f);
         }
-        // 공중에서의 이동
+        // 공중 이동
         else if (!grounded)
         {
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
             _rigidbody.velocity = targetDirection.normalized * (moveSpeed * inputMagnitude) + new Vector3(0.0f, _rigidbody.velocity.y, 0.0f) * airMultiplier;
         }
 
-        // 애니메이터 업데이트
         if (_hasAnimator)
         {
             _animator.SetFloat(_animIDSpeed, moveSpeed);
             _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
         }
     }
+
 
     /// <summary>
     /// Swing the player

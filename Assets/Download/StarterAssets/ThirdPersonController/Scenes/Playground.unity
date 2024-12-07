@@ -1467,7 +1467,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8718778828885884488, guid: e5f4daf24146ee040b5a2d7a73b30aa0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 13.26
+      value: 12.15
       objectReference: {fileID: 0}
     - target: {fileID: 8718778828885884488, guid: e5f4daf24146ee040b5a2d7a73b30aa0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2191,7 +2191,7 @@ MonoBehaviour:
   moveSpeed: 0
   walkSpeed: 3
   sprintSpeed: 5.335
-  swingSpeed: 10
+  swingSpeed: 11
   _verticalVelocity: 0
   groundDrag: 2
   JumpHeight: 1.5
