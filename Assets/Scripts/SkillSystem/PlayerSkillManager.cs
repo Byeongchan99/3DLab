@@ -13,5 +13,10 @@ public class PlayerSkillManager : MonoBehaviour
         PlayerSkillData skillData = playerSkillList[skillIndex];
         skillExecutor.ExecuteSkill(caster, target, skillData);
     }
+
+    public void AddSkill(PlayerSkillData skillData)
+    {
+        playerSkillList.Add(skillData);
+    }
 }
 

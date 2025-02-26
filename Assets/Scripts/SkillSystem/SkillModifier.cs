@@ -10,8 +10,6 @@ public class SkillModifier : MonoBehaviour
         skillData.finalDamage += 50f;
 
         // 2) DoT 효과 추가
-        // BurnDotEffect는 별도 ScriptableObject(또는 클래스로 만든) 
-        // SkillEffect로 만들어두고, 여기서 참조 가능
         if (!skillData.finalEffects.Contains(skillEffect))
         {
             skillData.finalEffects.Add(skillEffect);

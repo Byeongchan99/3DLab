@@ -12,9 +12,13 @@ public class SkillExecutor : MonoBehaviour
         {
             caster = caster,
             target = target,
-            finalDamage = skillData.finalDamage,
-            finalCost = skillData.finalCost,
-            finalCooldown = skillData.finalCooldown
+            damage = skillData.finalDamage,
+            damageCoefficient = skillData.finalCoefficient,
+            cost = skillData.finalCost,
+            cooldown = skillData.finalCooldown,
+            castTime = skillData.finalCastTime,
+            duration = skillData.finalDuration,
+            range = skillData.finalRange
         };
 
         // 2) 각 이펙트 적용

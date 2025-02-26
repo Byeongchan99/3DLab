@@ -9,9 +9,12 @@ public class PlayerSkillData
 
     // 강화 후 최종적으로 계산된 값
     public float finalDamage;
+    public float finalCoefficient;
     public float finalCost;
     public float finalCooldown;
     public float finalCastTime;
+    public float finalDuration;
+    public float finalRange;
 
     // 추가로 붙은 효과(DoT, 버프 등) 목록
     // 만약 BaseSkillData에 있는 effects + 새로 붙은 effects를 합칠 수도 있고,
