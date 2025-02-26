@@ -24,7 +24,7 @@ namespace Tank
         private bool canBoost = true;
         private bool canShield = true;
 
-        private bool hasShield = false;
+        //private bool hasShield = false;
 
         private void Start()
         {
