@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerSkillManager : MonoBehaviour
@@ -34,14 +35,21 @@ public class PlayerSkillManager : MonoBehaviour
         modifier.Apply(skillData);
     }
 
-    // 3) 스킬 사용
-    public void UseSkill(int skillIndex, GameObject caster, GameObject target)
+    // 3) 스킬 사용 - 타겟팅 스킬
+    public void UseSkill(int skillIndex)
     {
         if (skillIndex < 0 || skillIndex >= playerSkillList.Count) return;
 
         PlayerSkillData skillData = playerSkillList[skillIndex];
+
+        if (skillData.baseSkillData.hitType == SkillHitType.ProjectileNonTargeting)
+        {
+            // 타겟팅 스킬의 경우, 타겟을 지정해야 함
+            // 임시로 자신을 타겟으로 설정
+            UseSkill(skillIndex, this.gameObject, this.gameObject);
+        }
         // SkillExecutor가 실제 스킬 효과를 적용
         skillExecutor.ExecuteSkill(caster, target, skillData);
-    }
+    }    
 }
 
