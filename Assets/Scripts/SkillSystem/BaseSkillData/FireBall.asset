@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 238c6afc329023345bebf32b331f42ae, type: 3}
   m_Name: FireBall
   m_EditorClassIdentifier: 
+  skillName: "\uD30C\uC774\uC5B4\uBCFC"
   baseDamage: 100
   damageCoefficient: 1
   cost: 10

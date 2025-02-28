@@ -7,6 +7,8 @@ public class SkillExecutor : MonoBehaviour
     // 스킬을 실행할 때
     public void ExecuteSkill(GameObject caster, GameObject target, PlayerSkillData skillData)
     {
+        Debug.Log($"스킬 사용: {skillData.baseSkillData.skillName}");
+
         // 1) SkillUsageContext 준비
         SkillContext context = new SkillContext()
         {

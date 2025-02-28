@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SkillContext : MonoBehaviour
+public class SkillContext
 {
     public GameObject caster;
     public GameObject target;

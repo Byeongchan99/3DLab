@@ -50,6 +50,7 @@ public enum SkillHitType
 public class BaseSkillData : ScriptableObject
 {
     [Header("속성 / 베이스 스탯")]
+    public string skillName;
     public float baseDamage; // 기본 대미지
     public float damageCoefficient; // 대미지 계수
     public float cost; // 비용
