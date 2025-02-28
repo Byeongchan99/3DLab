@@ -39,7 +39,8 @@ public class PlayerController : MonoBehaviour
     // UI에서 강화 버튼 눌렀을 때
     public void OnClickUpgradeSkillButton(int skillIndex)
     {
-        // 파이어볼 = 0번 스킬
+        // 0번 강화 = 대미지 강화, 1번 강화 = 도트 대미지 추가
         playerSkillManager.UpgradeSkill(skillIndex, 0); // 테스트용
+        playerSkillManager.UpgradeSkill(skillIndex, 1); // 테스트용
     }
 }

@@ -32,8 +32,6 @@ public class PlayerSkillManager : MonoBehaviour
 
         // Modifier를 적용
         modifier.Apply(skillData);
-
-        Debug.Log($"{skillData.baseSkillData.skillName}에 {modifier.name} 효과 적용");
     }
 
     // 3) 스킬 사용

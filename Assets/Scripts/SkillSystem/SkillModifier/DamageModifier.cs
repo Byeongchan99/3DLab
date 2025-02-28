@@ -11,6 +11,6 @@ public class DamageModifier : SkillModifier
     public override void Apply(PlayerSkillData skillData)
     {
         skillData.finalDamage += damageValue;
-        base.Apply(skillData);       
+        Debug.Log($"{skillData.baseSkillData.skillName}에 {name} 효과 적용");
     }
 }

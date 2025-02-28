@@ -6,7 +6,7 @@ public class Enemy : MonoBehaviour, IDamageable
 {
     [Header("Enemy Settings")]
     public float maxHP = 100f;
-    private float currentHP;
+    public float currentHP;
 
     private void Awake()
     {
