@@ -5,8 +5,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "SkillModifier", menuName = "Skill/SkillModifier")]
 public class SkillModifier : ScriptableObject
 {
-    // 예: 강화할 대미지량
-    public float damageUpValue;
     // 예: 강화할 추가 이펙트(화상 등)
     public SkillEffect additionalEffect;
 
@@ -14,10 +12,7 @@ public class SkillModifier : ScriptableObject
 
     public virtual void Apply(PlayerSkillData skillData)
     {
-        // 1) 대미지 증가
-        skillData.finalDamage += damageUpValue;
-
-        // 2) 효과 추가
+        // 효과 추가
         if (additionalEffect != null && !skillData.extraEffects.Contains(additionalEffect))
         {
             skillData.extraEffects.Add(additionalEffect);

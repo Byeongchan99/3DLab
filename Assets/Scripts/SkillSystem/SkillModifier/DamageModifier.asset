@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 201a7a3590db3b4479bc457699b76208, type: 3}
+  m_Script: {fileID: 11500000, guid: 5124468fd1a37ea4cbcb50ede9aa9de5, type: 3}
   m_Name: DamageModifier
   m_EditorClassIdentifier: 
-  damageUpValue: 100
   additionalEffect: {fileID: 11400000, guid: b248048d0c409194eaf350c39f58d13d, type: 2}
+  damageValue: 100
