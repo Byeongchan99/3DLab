@@ -23,6 +23,7 @@ MonoBehaviour:
   castType: 1
   targetType: 2
   targetingType: 1
-  hitType: 2
+  hitType: 4
   effects:
   - {fileID: 11400000, guid: b248048d0c409194eaf350c39f58d13d, type: 2}
+  skillPrefab: {fileID: 664579405859764855, guid: 453d7c4bc26ea7642b10e82e38d08e03, type: 3}

@@ -164,7 +164,7 @@ public class PlayerMovement : MonoBehaviour
     public enum MovementState
     {
         freeze,
-        grappling,
+        //grappling,
         swinging,
         walking,
         sprinting,
@@ -345,12 +345,14 @@ public class PlayerMovement : MonoBehaviour
             _rigidbody.velocity = Vector3.zero;
         }
 
+        /*
         // Mode - Grappling
         else if (activeGrapple)
         {
             state = MovementState.grappling;
             moveSpeed = sprintSpeed;
         }
+        */
 
         // Mode - Swinging
         else if (swinging && !grounded)
@@ -690,6 +692,7 @@ public class PlayerMovement : MonoBehaviour
         return Mathf.Clamp(angle, min, max);
     }
 
+    /*
     /// <summary>
     /// 특정 위치로 점프 (그랩 등에서 사용)
     /// </summary>
@@ -729,6 +732,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool enableMovementOnNextTouch;
 
+    /*
     private void OnCollisionEnter(Collision collision)
     {
         if (enableMovementOnNextTouch)
@@ -739,6 +743,7 @@ public class PlayerMovement : MonoBehaviour
             GetComponent<Grappling>().StopGrapple();
         }
     }
+    */
 
     /// <summary>
     /// 경사면 위에 있는지 체크

@@ -6,6 +6,7 @@ using UnityEngine;
 public class PlayerSkillManager : MonoBehaviour
 {
     public SkillExecutor skillExecutor;
+    public ProjectileManager projectileManager;
     public BaseSkillDataManager baseSkillDataManager;
     public ModifierManager modifierManager;
     // 플레이어가 보유 중인 스킬
@@ -44,12 +45,9 @@ public class PlayerSkillManager : MonoBehaviour
 
         if (skillData.baseSkillData.hitType == SkillHitType.ProjectileNonTargeting)
         {
-            // 타겟팅 스킬의 경우, 타겟을 지정해야 함
-            // 임시로 자신을 타겟으로 설정
-            UseSkill(skillIndex, this.gameObject, this.gameObject);
+            Debug.Log("논타겟팅 투사체 스킬 파이어볼 사용");
+            projectileManager.SpawnProjectile(gameObject, skillData);
         }
-        // SkillExecutor가 실제 스킬 효과를 적용
-        skillExecutor.ExecuteSkill(caster, target, skillData);
     }    
 }
 

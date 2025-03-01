@@ -67,4 +67,6 @@ public class BaseSkillData : ScriptableObject
 
     [Header("효과 목록")]
     public List<SkillEffect> effects;  // 여러 효과를 등록
+
+    public GameObject skillPrefab; // 스킬 프리팹
 }

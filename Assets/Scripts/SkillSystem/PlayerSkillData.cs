@@ -6,6 +6,7 @@ public class PlayerSkillData
 {
     // 어떤 스킬의 강화 버전인지 구분하기 위해 참조
     public BaseSkillData baseSkillData;
+    public GameObject skillPrefab; // 투사체 프리팹
 
     // 강화 후 최종적으로 계산된 값
     public float finalDamage;
@@ -28,6 +29,8 @@ public class PlayerSkillData
     public PlayerSkillData(BaseSkillData baseSkillRef)
     {
         this.baseSkillData = baseSkillRef;
+        this.skillPrefab = baseSkillRef.skillPrefab;
+
         finalDamage = baseSkillRef.baseDamage;
         finalCoefficient = baseSkillRef.damageCoefficient;
         finalCost = baseSkillRef.cost;
