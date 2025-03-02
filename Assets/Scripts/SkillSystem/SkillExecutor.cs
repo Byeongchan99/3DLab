@@ -23,12 +23,10 @@ public class SkillExecutor : MonoBehaviour
             range = skillData.finalRange
         };
 
-        /*
         // 2) 각 이펙트 적용
         foreach (var effect in skillData.finalEffects)
         {
             effect.ApplyEffect(context);
         }
-        */
     }
 }

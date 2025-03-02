@@ -6,7 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     PlayerSkillManager playerSkillManager;
     // 테스트
-    public Enemy enemy;
+    public Character enemy;
 
     void Awake()
     {
@@ -23,6 +23,27 @@ public class PlayerController : MonoBehaviour
             // target = 임시로 자신이라거나, 레이캐스트로 맞춘 적 등
             playerSkillManager.UseSkill(0);
         }
+        else if (Input.GetKeyDown(KeyCode.W))
+        {
+            // 1번 스킬 사용
+            playerSkillManager.UseSkill(1);
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            // 2번 스킬 사용
+            playerSkillManager.UseSkill(2);
+        }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            // 3번 스킬 사용
+            playerSkillManager.UseSkill(3);
+        }
+    }
+
+    // 테스트용 - 원래는 마우스 클릭 등으로 타겟을 지정해야 함
+    public GameObject GetTarget()
+    {
+        return enemy.gameObject;
     }
 
     public void OnClickAddSkillButton(int skillIndex)

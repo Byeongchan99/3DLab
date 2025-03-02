@@ -5,7 +5,9 @@ using UnityEngine;
 
 public class PlayerSkillManager : MonoBehaviour
 {
+    public PlayerController playerController;
     public SkillExecutor skillExecutor;
+
     public ProjectileManager projectileManager;
     public BaseSkillDataManager baseSkillDataManager;
     public ModifierManager modifierManager;
@@ -36,17 +38,28 @@ public class PlayerSkillManager : MonoBehaviour
         modifier.Apply(skillData);
     }
 
-    // 3) 스킬 사용 - 타겟팅 스킬
+    // 3) 스킬 사용
     public void UseSkill(int skillIndex)
     {
         if (skillIndex < 0 || skillIndex >= playerSkillList.Count) return;
 
         PlayerSkillData skillData = playerSkillList[skillIndex];
 
-        if (skillData.baseSkillData.hitType == SkillHitType.ProjectileNonTargeting)
+        switch (skillData.baseSkillData.hitType)
         {
-            Debug.Log("논타겟팅 투사체 스킬 파이어볼 사용");
-            projectileManager.SpawnProjectile(gameObject, skillData);
+            case SkillHitType.InstantTargeting:
+                Debug.Log("즉발 타겟팅 스킬 사용");
+                GameObject target = playerController.GetTarget();
+                skillExecutor.ExecuteSkill(gameObject, target, skillData);
+                break;
+            case SkillHitType.AreaNonTargeting:
+                Debug.Log("타겟팅 스킬 사용");
+                
+                break;
+            case SkillHitType.ProjectileNonTargeting:
+                Debug.Log("논타겟팅 투사체 스킬 사용");
+                projectileManager.SpawnProjectile(gameObject, skillData);
+                break;
         }
     }    
 }
