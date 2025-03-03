@@ -63,6 +63,8 @@ public class Character : MonoBehaviour, IDamageable
     {
         currentHP += amount;
         currentHP = Mathf.Min(currentHP, maxHP);
+
+        // 초과한 체력 회복량을 보호막으로 전환
     }
 
     // 체력이 0 이하가 되면 사망 처리
