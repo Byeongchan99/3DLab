@@ -18,6 +18,8 @@ public class PlayerSkillData
     public float finalRange;
 
     // 필요하다면 “스킬 레벨”이나 “강화 등급” 등도 여기에
+    public string skillName;
+    public int skillID;
     public int skillLevel;
 
     // 추가로 붙은 효과(DoT, 버프 등) 목록

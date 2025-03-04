@@ -9,6 +9,7 @@ public interface IDamageable
 
 public abstract class SkillEffect : ScriptableObject
 {
+    public float duration = 0f;
     /// <summary>
     /// 효과를 적용할 때 호출되는 메서드
     /// </summary>

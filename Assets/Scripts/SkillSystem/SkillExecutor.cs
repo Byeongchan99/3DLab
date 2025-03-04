@@ -14,6 +14,8 @@ public class SkillExecutor : MonoBehaviour
         {
             caster = caster,
             target = target,
+            skillName = skillData.skillName,
+            skillID = skillData.skillID,
             damage = skillData.finalDamage,
             damageCoefficient = skillData.finalCoefficient,
             cost = skillData.finalCost,

@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 238c6afc329023345bebf32b331f42ae, type: 3}
-  m_Name: Shield
+  m_Name: Swamp
   m_EditorClassIdentifier: 
-  skillName: "\uC274\uB4DC"
-  skillID: 1
-  baseDamage: 100
+  skillName: "\uB2AA\uC9C0\uB300 \uC18C\uD658"
+  skillID: 3
+  baseDamage: 20
   damageCoefficient: 1
   cost: 10
   cooldown: 5
   castTime: 0
   duration: 3
-  range: 4
+  range: 5
   castType: 1
-  targetType: 3
-  targetingType: 1
-  hitType: 1
+  targetType: 2
+  targetingType: 2
+  hitType: 5
   effects:
-  - {fileID: 11400000, guid: ab14c22008803854d8967834cba257b2, type: 2}
-  skillPrefab: {fileID: 0}
+  - {fileID: 11400000, guid: b248048d0c409194eaf350c39f58d13d, type: 2}
+  skillPrefab: {fileID: 1358173978938572612, guid: 477101f03d31ea4499b39d402279e804, type: 3}

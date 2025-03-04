@@ -7,6 +7,9 @@ public class SkillContext
     public GameObject caster;
     public GameObject target;
 
+    public string skillName; // 스킬 이름
+    public int skillID; // 스킬 ID
+
     public float damage; // 기본 대미지
     public float damageCoefficient; // 대미지 계수
     public float cost; // 비용

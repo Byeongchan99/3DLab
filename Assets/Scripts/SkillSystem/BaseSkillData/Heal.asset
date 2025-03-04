@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Heal
   m_EditorClassIdentifier: 
   skillName: "\uD790"
+  skillID: 2
   baseDamage: 100
   damageCoefficient: 1
   cost: 10

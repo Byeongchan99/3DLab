@@ -8,7 +8,7 @@ public class PlayerSkillManager : MonoBehaviour
     public PlayerController playerController;
     public SkillExecutor skillExecutor;
 
-    public ProjectileManager projectileManager;
+    public SkillSpawner skillspawner;
     public BaseSkillDataManager baseSkillDataManager;
     public ModifierManager modifierManager;
     // 플레이어가 보유 중인 스킬
@@ -44,21 +44,21 @@ public class PlayerSkillManager : MonoBehaviour
         if (skillIndex < 0 || skillIndex >= playerSkillList.Count) return;
 
         PlayerSkillData skillData = playerSkillList[skillIndex];
+        GameObject target = playerController.GetTarget();
 
         switch (skillData.baseSkillData.hitType)
         {
             case SkillHitType.InstantTargeting:
-                Debug.Log("즉발 타겟팅 스킬 사용");
-                GameObject target = playerController.GetTarget();
+                Debug.Log("즉발 타겟팅 스킬 사용");              
                 skillExecutor.ExecuteSkill(gameObject, target, skillData);
-                break;
-            case SkillHitType.AreaNonTargeting:
-                Debug.Log("타겟팅 스킬 사용");
-                
-                break;
+                break;           
             case SkillHitType.ProjectileNonTargeting:
                 Debug.Log("논타겟팅 투사체 스킬 사용");
-                projectileManager.SpawnProjectile(gameObject, skillData);
+                skillspawner.SpawnProjectile(gameObject, skillData);
+                break;
+            case SkillHitType.AreaNonTargeting:
+                Debug.Log("논타겟팅 범위 스킬 사용");
+                skillspawner.SpawnArea(gameObject, target.transform.position, skillData);
                 break;
         }
     }    
