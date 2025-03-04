@@ -58,15 +58,21 @@ public class PlayerController : MonoBehaviour
     }
 
     // UI에서 강화 버튼 눌렀을 때
-    public void OnClickUpgradeFireBallButton(int skillIndex)
+    public void OnClickUpgradeDamageButton(int skillIndex)
     {
-        // 0번 강화 = 대미지 강화, 1번 강화 = 도트 대미지 추가
-        //playerSkillManager.UpgradeSkill(skillIndex, 0); // 테스트용
+        // 0번 강화 = 대미지 강화
+        playerSkillManager.UpgradeSkill(skillIndex, 0); // 테스트용
+    }
+
+    public void OnClickUpgradeDotButton(int skillIndex)
+    {
+        // 1번 강화 = 도트 대미지 추가
         playerSkillManager.UpgradeSkill(skillIndex, 1); // 테스트용
     }
 
     public void OnClickUpgradeHealButton(int skillIndex)
     {
+        // 2번 강화 = 힐 추가
         playerSkillManager.UpgradeSkill(skillIndex, 2); // 테스트용
     }
 }
